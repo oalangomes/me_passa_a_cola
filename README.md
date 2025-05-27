@@ -1,3 +1,4 @@
+
 # 📘 Me passa a cola?
 
 Um GPT personalizado criado com empatia, criatividade e foco real em pessoas que aprendem de forma diferente.
@@ -75,22 +76,19 @@ Assim você pode voltar depois e continuar de onde parou.
 
 ---
 
-## 🤝 Integração com Notion e Google Sheets
+## 🤝 Integração com Notion
 
 ### ✅ Funcionalidade externa
 
-O projeto permite enviar conteúdos gerados para:
-
-* Um banco de dados no **Notion**
-* Uma planilha no **Google Sheets**
+O projeto permite enviar conteúdos gerados para um **banco de dados no Notion**, de forma automática e personalizada.
 
 ### 🏢 Como funciona:
 
-1. O usuário fornece seu **token do Notion** ou o **ID da planilha do Sheets**
+1. O usuário fornece seu **token do Notion** e o **ID do banco de dados**
 2. O GPT envia os dados para um App Script (usado como backend)
-3. Esse backend armazena os conteúdos no local desejado
+3. Esse backend armazena os conteúdos no Notion, organizados por tema
 
-### 📚 Como pegar o token do Notion:
+### 🧪 Como pegar o token do Notion:
 
 1. Acesse [https://www.notion.com/my-integrations](https://www.notion.com/my-integrations)
 2. Clique em "New integration"
@@ -99,19 +97,30 @@ O projeto permite enviar conteúdos gerados para:
 5. Salve e copie o token gerado (`secret_...`)
 6. No Notion, compartilhe sua página ou banco com a integração criada (botão "Share")
 
-### 📊 Como saber o ID do banco ou página:
+### 📊 Como saber o ID do banco:
 
-* Acesse a página ou database desejado
+* Acesse o banco de dados desejado
 * Copie da URL: `https://www.notion.so/nome-da-pagina/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
-* O trecho final (sem os `-`) é o **page\_id** ou **database\_id**
+* O trecho final (sem os `-`) é o **database_id**
+
+### 📋 Estrutura mínima do Notion
+
+Crie um banco com os seguintes campos (com esses nomes e tipos):
+
+- Tema (Título)
+- Tipo (Texto)
+- Resumo (Texto)
+- Observacoes (Texto)
+- Tags (Multi-seleção)
+- Data (Data)
 
 ---
 
 ## ⚖️ Política de uso e privacidade
 
 * Nenhuma informação pessoal é armazenada nos servidores do GPT.
-* O envio para Google Sheets ou Notion é feito diretamente pelo App Script fornecido.
-* Cada usuário deve configurar seu próprio token de acesso.
+* O envio para o Notion é feito diretamente pelo App Script fornecido.
+* Cada usuário configura seu próprio token de acesso.
 * O projeto não acessa, armazena nem compartilha suas credenciais.
 
 > Tudo é feito localmente entre você, seu navegador e seus serviços.
@@ -128,10 +137,9 @@ Se esse projeto fizer sentido pra você, sua família ou seu time, pode me chama
 
 ## 📌 Criado por
 
-**Alan Gomes**
-Arquiteto de Soluções | Dev criativo | Pai neurodivergente | Explorador de ideias reais com IA
-
-[𝔻 LinkedIn](https://www.linkedin.com/in/oalangomes) • [𝔻 Instagram](https://instagram.com/oalangomes)
+**Alan Gomes**  
+Arquiteto de Soluções | Dev criativo | Pai neurodivergente | Explorador de ideias reais com IA  
+[LinkedIn](https://www.linkedin.com/in/oalangomes) • [Instagram](https://instagram.com/oalangomes)
 
 ---
 
