@@ -17,11 +17,11 @@ function doPost(e) {
       ]);
     }
 
-    // ✅ Enviar para Notion com busca de banco por nome (se ID não for enviado)
+    // ✅ Enviar para Notion
     if ((destino === "notion" || destino === "ambos") && data.notion_token) {
       let databaseId = data.notion_database_id;
 
-      // 🔍 Se o ID não foi enviado, tenta buscar pelo nome
+      // 🔍 Buscar banco pelo nome se ID não foi enviado
       if (!databaseId && data.nome_database) {
         const searchResponse = UrlFetchApp.fetch("https://api.notion.com/v1/search", {
           method: "post",
@@ -37,18 +37,40 @@ function doPost(e) {
         });
 
         const results = JSON.parse(searchResponse).results;
-        if (!results || results.length === 0) {
-          throw new Error("Banco de dados não encontrado com o nome fornecido.");
+        if (results && results.length > 0) {
+          databaseId = results[0].id;
+        } else {
+          // ❗ Se não achou, criar novo database
+          const createResponse = UrlFetchApp.fetch("https://api.notion.com/v1/databases", {
+            method: "post",
+            contentType: "application/json",
+            headers: {
+              "Authorization": "Bearer " + data.notion_token,
+              "Notion-Version": "2022-06-28"
+            },
+            payload: JSON.stringify({
+              parent: { type: "page_id", page_id: data.root_page_id || "<INSIRA_AQUI_UM_PAGE_ID_RAIZ>" },
+              title: [{
+                type: "text",
+                text: { content: data.nome_database }
+              }],
+              properties: {
+                "Tema": { title: {} },
+                "Tipo": { rich_text: {} },
+                "Resumo": { rich_text: {} },
+                "Observacoes": { rich_text: {} },
+                "Tags": { multi_select: {} },
+                "Data": { date: {} }
+              }
+            })
+          });
+          databaseId = JSON.parse(createResponse).id;
         }
-
-        databaseId = results[0].id;
       }
 
-      if (!databaseId) {
-        throw new Error("ID do banco do Notion não fornecido nem localizado por nome.");
-      }
+      if (!databaseId) throw new Error("Banco de dados do Notion não encontrado nem criado.");
 
-      // ✅ Monta payload do conteúdo
+      // ✅ Criar nova página com os dados
       const payload = {
         parent: { database_id: databaseId },
         properties: {
@@ -57,11 +79,10 @@ function doPost(e) {
           "Resumo": { rich_text: [{ text: { content: data.resumo || "" } }] },
           "Observacoes": { rich_text: [{ text: { content: data.observacoes || "" } }] },
           "Tags": { multi_select: (data.tags || "").split(",").map(t => ({ name: t.trim() })) },
-          "Data": { date: { start: new Date().toISOString() } }
+          "Data": { date: { start: now.toISOString() } }
         }
       };
 
-      // 📤 Envia para Notion
       UrlFetchApp.fetch("https://api.notion.com/v1/pages", {
         method: "post",
         contentType: "application/json",
