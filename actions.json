@@ -1,0 +1,62 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Enviar Conteúdo de Estudo",
+    "description": "Envia conteúdo de estudo para o banco do Notion, com dados de destino informados no corpo da requisição.",
+    "version": "v1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://script.google.com/macros/s/AKfycbxZvSODSeWX6vMqZzTkB_o6U4dI-_543tftUjID3wxi2_KKSGfBywfvWRb_ORK9bNqzKg/exec"
+    }
+  ],
+  "paths": {
+    "/": {
+      "post": {
+        "operationId": "enviarConteudo",
+        "description": "Envia o conteúdo para a planilha e/ou Notion informados no corpo.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "notion_token": {
+                    "type": "string",
+                    "description": "Token da integração do Notion (secret_...)"
+                  },  
+                  "nome_database": {
+                    "type": "string",
+                    "description": "Nome Da Base"
+                  },
+                  "tema": { "type": "string" },
+                  "subtitulo": { "type": "string" },
+                  "tipo": { "type": "string" },
+                  "resumo": { "type": "string" },
+                  "observacoes": { "type": "string" },
+                  "tags": { "type": "string" },
+                  "data": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "destino": {
+                    "type": "string",
+                    "description": "Destino do envio: 'notion'",
+                    "enum": ["notion"]
+                  }
+                },
+                "required": ["destino", "tema", "resumo"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso"
+          }
+        }
+      }
+    }
+  }
+}
