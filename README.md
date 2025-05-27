@@ -12,7 +12,7 @@ A ideia surgiu de uma necessidade real dentro de uma família neurodivergente e 
 
 ---
 
-## 🎯 Motivação
+## 🌟 Motivação
 
 > "Somos uma família atípica. Minha esposa tem TEA, eu sou TDAH, nossos filhos também. Estudar, aqui, exige criatividade e empatia. E às vezes, o que a gente precisa, ainda não existe. Então a gente cria."
 
@@ -65,7 +65,7 @@ O que gostaria de fazer agora?
 
 ---
 
-## 📎 Dica para uso ideal
+## 📌 Dica para uso ideal
 
 Para quem usar com frequência: renomeie cada chat com o tema. Exemplo:
 
@@ -75,7 +75,50 @@ Assim você pode voltar depois e continuar de onde parou.
 
 ---
 
-## 🤝 Quer usar?
+## 🤝 Integração com Notion e Google Sheets
+
+### ✅ Funcionalidade externa
+
+O projeto permite enviar conteúdos gerados para:
+
+* Um banco de dados no **Notion**
+* Uma planilha no **Google Sheets**
+
+### 🏢 Como funciona:
+
+1. O usuário fornece seu **token do Notion** ou o **ID da planilha do Sheets**
+2. O GPT envia os dados para um App Script (usado como backend)
+3. Esse backend armazena os conteúdos no local desejado
+
+### 📚 Como pegar o token do Notion:
+
+1. Acesse [https://www.notion.com/my-integrations](https://www.notion.com/my-integrations)
+2. Clique em "New integration"
+3. Dê um nome (ex: `MePassaACola`), escolha um workspace
+4. Marque as permissões: `Read`, `Insert`, `Update`
+5. Salve e copie o token gerado (`secret_...`)
+6. No Notion, compartilhe sua página ou banco com a integração criada (botão "Share")
+
+### 📊 Como saber o ID do banco ou página:
+
+* Acesse a página ou database desejado
+* Copie da URL: `https://www.notion.so/nome-da-pagina/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+* O trecho final (sem os `-`) é o **page\_id** ou **database\_id**
+
+---
+
+## ⚖️ Política de uso e privacidade
+
+* Nenhuma informação pessoal é armazenada nos servidores do GPT.
+* O envio para Google Sheets ou Notion é feito diretamente pelo App Script fornecido.
+* Cada usuário deve configurar seu próprio token de acesso.
+* O projeto não acessa, armazena nem compartilha suas credenciais.
+
+> Tudo é feito localmente entre você, seu navegador e seus serviços.
+
+---
+
+## 🙌 Quer usar?
 
 Se esse projeto fizer sentido pra você, sua família ou seu time, pode me chamar. É um prazer compartilhar ou adaptar a ideia.
 
@@ -88,7 +131,7 @@ Se esse projeto fizer sentido pra você, sua família ou seu time, pode me chama
 **Alan Gomes**
 Arquiteto de Soluções | Dev criativo | Pai neurodivergente | Explorador de ideias reais com IA
 
-[LinkedIn](https://www.linkedin.com/in/oalangomes)  •  [Instagram](https://instagram.com/oalangomes)
+[𝔻 LinkedIn](https://www.linkedin.com/in/oalangomes) • [𝔻 Instagram](https://instagram.com/oalangomes)
 
 ---
 
