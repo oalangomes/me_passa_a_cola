@@ -1,98 +1,156 @@
 function doPost(e) {
   try {
-    const data = JSON.parse(e.postData.contents);
-    const destino = (data.destino || "sheets").toLowerCase();
+        const data = JSON.parse(e.postData.contents);
+
+
     const now = new Date();
 
-    // ✅ Enviar para Google Sheets
-    if ((destino === "sheets" || destino === "ambos") && data.sheet_id) {
-      const sheet = SpreadsheetApp.openById(data.sheet_id).getActiveSheet();
-      sheet.appendRow([
-        now,
-        data.tema || "",
-        data.tipo || "",
-        data.resumo || "",
-        data.observacoes || "",
-        data.tags || ""
-      ]);
+    if (!data.notion_token || !data.nome_database || !data.tema) {
+      throw new Error("Token, nome do banco e tema são obrigatórios.");
     }
 
-    // ✅ Enviar para Notion
-    if ((destino === "notion" || destino === "ambos") && data.notion_token) {
-      let databaseId = data.notion_database_id;
+    const headers = {
+      "Authorization": "Bearer " + data.notion_token,
+      "Notion-Version": "2022-06-28",
+      "Content-Type": "application/json"
+    };
 
-      // 🔍 Buscar banco pelo nome se ID não foi enviado
-      if (!databaseId && data.nome_database) {
-        const searchResponse = UrlFetchApp.fetch("https://api.notion.com/v1/search", {
-          method: "post",
-          contentType: "application/json",
-          headers: {
-            "Authorization": "Bearer " + data.notion_token,
-            "Notion-Version": "2022-06-28"
-          },
-          payload: JSON.stringify({
-            query: data.nome_database,
-            filter: { property: "object", value: "database" }
-          })
-        });
+    // 1️⃣ Buscar página root "Me Passa A Cola (GPT)" com validação exata
+    const rootSearch = UrlFetchApp.fetch("https://api.notion.com/v1/search", {
+      method: "post",
+      headers: headers,
+      payload: JSON.stringify({
+        query: "Me Passa A Cola (GPT)",
+        filter: { property: "object", value: "page" }
+      })
+    });
 
-        const results = JSON.parse(searchResponse).results;
-        if (results && results.length > 0) {
-          databaseId = results[0].id;
-        } else {
-          // ❗ Se não achou, criar novo database
-          const createResponse = UrlFetchApp.fetch("https://api.notion.com/v1/databases", {
-            method: "post",
-            contentType: "application/json",
-            headers: {
-              "Authorization": "Bearer " + data.notion_token,
-              "Notion-Version": "2022-06-28"
-            },
-            payload: JSON.stringify({
-              parent: { type: "page_id", page_id: data.root_page_id || "<INSIRA_AQUI_UM_PAGE_ID_RAIZ>" },
-              title: [{
-                type: "text",
-                text: { content: data.nome_database }
-              }],
-              properties: {
-                "Tema": { title: {} },
-                "Tipo": { rich_text: {} },
-                "Resumo": { rich_text: {} },
-                "Observacoes": { rich_text: {} },
-                "Tags": { multi_select: {} },
-                "Data": { date: {} }
-              }
-            })
-          });
-          databaseId = JSON.parse(createResponse).id;
-        }
-      }
+    const rootResults = JSON.parse(rootSearch.getContentText()).results.filter(r => {
+      const titleProp = r.properties?.title || r.properties?.Name;
+      return r.object === "page" && titleProp?.title?.[0]?.text?.content === "Me Passa A Cola (GPT)";
+    });
 
-      if (!databaseId) throw new Error("Banco de dados do Notion não encontrado nem criado.");
+    if (!rootResults.length) {
+      return ContentService.createTextOutput("❌ Página root 'Me Passa A Cola (GPT)' não encontrada. Por favor, crie essa página manualmente no Notion e vincule a integração.");
+    }
 
-      // ✅ Criar nova página com os dados
-      const payload = {
-        parent: { database_id: databaseId },
+    const rootPageId = rootResults[0].id;
+
+    // 2️⃣ Buscar se o banco já existe (validação por nome exato)
+    const dbSearch = UrlFetchApp.fetch("https://api.notion.com/v1/search", {
+      method: "post",
+      headers: headers,
+      payload: JSON.stringify({
+        query: data.nome_database,
+        filter: { property: "object", value: "database" }
+      })
+    });
+
+    const dbResults = JSON.parse(dbSearch.getContentText()).results.filter(r => r.object === "database" && r.title?.[0]?.text?.content === data.nome_database);
+    let databaseId;
+
+    if (dbResults.length) {
+      databaseId = dbResults[0].id;
+    } else {
+      // Criar banco de dados dentro da página root
+      const dbPayload = {
+        parent: { page_id: rootPageId },
+        title: [
+          {
+            text: { content: data.nome_database }
+          }
+        ],
         properties: {
-          "Tema": { title: [{ text: { content: data.tema || "" } }] },
-          "Tipo": { rich_text: [{ text: { content: data.tipo || "" } }] },
-          "Resumo": { rich_text: [{ text: { content: data.resumo || "" } }] },
-          "Observacoes": { rich_text: [{ text: { content: data.observacoes || "" } }] },
-          "Tags": { multi_select: (data.tags || "").split(",").map(t => ({ name: t.trim() })) },
-          "Data": { date: { start: now.toISOString() } }
+          "Página": { title: {} },
+          "Tags": { multi_select: {} },
+          "Última edição": { last_edited_time: {} }
         }
       };
 
-      UrlFetchApp.fetch("https://api.notion.com/v1/pages", {
+      const createDB = UrlFetchApp.fetch("https://api.notion.com/v1/databases", {
         method: "post",
-        contentType: "application/json",
-        headers: {
-          "Authorization": "Bearer " + data.notion_token,
-          "Notion-Version": "2022-06-28"
-        },
-        payload: JSON.stringify(payload)
+        headers: headers,
+        payload: JSON.stringify(dbPayload)
+      });
+
+      databaseId = JSON.parse(createDB.getContentText()).id;
+    }
+
+    // 3️⃣ Criar subpágina com nome tipo + data atual
+    const today = new Date().toISOString().slice(0, 10);
+    const pageTitle = `${data.tipo || "Resumo"} - ${today}`;
+
+    const children = [];
+
+    if (data.subtitulo) {
+      children.push({
+        object: "block",
+        type: "heading_2",
+        heading_2: {
+          rich_text: [{ type: "text", text: { content: data.subtitulo } }]
+        }
       });
     }
+
+    // Adicionar índice se o resumo contiver múltiplos tópicos (baseado em marcadores)
+    if (data.resumo && data.resumo.includes("\n- ")) {
+      const topicos = data.resumo.split("\n").filter(l => l.startsWith("- ")).map((l, i) => `• ${l.substring(2)}`);
+      if (topicos.length > 1) {
+        children.push({
+          object: "block",
+          type: "bulleted_list_item",
+          bulleted_list_item: {
+            rich_text: [{ type: "text", text: { content: "📑 Índice" } }]
+          }
+        });
+        topicos.forEach(topico => {
+          children.push({
+            object: "block",
+            type: "bulleted_list_item",
+            bulleted_list_item: {
+              rich_text: [{ type: "text", text: { content: topico } }]
+            }
+          });
+        });
+      }
+    }
+
+    if (data.resumo) {
+      children.push({
+        object: "block",
+        type: "paragraph",
+        paragraph: {
+          rich_text: [{ type: "text", text: { content: data.resumo } }]
+        }
+      });
+    }
+
+    if (data.observacoes) {
+      children.push({
+        object: "block",
+        type: "paragraph",
+        paragraph: {
+          rich_text: [{ type: "text", text: { content: "🔍 Observações: " + data.observacoes } }]
+        }
+      });
+    }
+
+    const pagePayload = {
+      parent: { database_id: databaseId },
+      properties: {
+        "Página": { title: [{ text: { content: pageTitle } }] },
+        "Tags": {
+          multi_select: data.tags ? data.tags.split(",").map(t => ({ name: t.trim() })) : []
+        }
+      },
+      children: children
+    };
+
+    UrlFetchApp.fetch("https://api.notion.com/v1/pages", {
+      method: "post",
+      headers: headers,
+      payload: JSON.stringify(pagePayload)
+    });
 
     return ContentService.createTextOutput("✅ Conteúdo enviado com sucesso!");
   } catch (err) {
