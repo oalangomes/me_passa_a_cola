@@ -28,8 +28,12 @@ async function findOrCreatePage(notionClient, title, parentPageId = null) {
         });
 
         let foundPage = searchResponse.results.find(page =>
-            page.properties.title?.title[0]?.plain_text === title &&
-            (parentPageId ? page.parent?.page_id === parentPageId : page.parent?.type === "workspace")
+            page.properties &&
+            page.properties.title &&
+            page.properties.title.title &&
+            page.properties.title.title[0] &&
+            page.properties.title.title[0].plain_text === title &&
+            (parentPageId ? page.parent && page.parent.page_id === parentPageId : page.parent && page.parent.type === "workspace")
         );
 
         if (foundPage) {
@@ -62,9 +66,9 @@ async function findOrCreatePage(notionClient, title, parentPageId = null) {
  */
 function getDatabaseSchema(type) {
     const normalizedType = type.toLowerCase().includes("resumo") ? "resumo" :
-                           type.toLowerCase().includes("flashcard") ? "flashcard" :
-                           type.toLowerCase().includes("código") || type.toLowerCase().includes("aplicação") ? "código" :
-                           "padrão";
+        type.toLowerCase().includes("flashcard") ? "flashcard" :
+            type.toLowerCase().includes("código") || type.toLowerCase().includes("aplicação") ? "código" :
+                "padrão";
 
     switch (normalizedType) {
         case "flashcard":
@@ -246,7 +250,7 @@ app.post("/create-notion-flashcards", async (req, res) => {
 
     // Valida se cada item no array Flashcards tem 'frente' e 'verso'
     if (!Flashcards.every(fc => fc && typeof fc.frente === 'string' && typeof fc.verso === 'string')) {
-         return res.status(400).json({ error: "Formato inválido no array 'Flashcards'. Cada item deve ter 'frente' e 'verso' como strings." });
+        return res.status(400).json({ error: "Formato inválido no array 'Flashcards'. Cada item deve ter 'frente' e 'verso' como strings." });
     }
 
     // Inicializa cliente Notion com o token do request
