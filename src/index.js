@@ -117,9 +117,13 @@ async function findOrCreateDatabase(notionClient, dbTitle, parentPageId, content
         });
 
         let foundDb = searchResponse.results.find(db =>
-            db.title[0]?.plain_text === dbTitle &&
-            db.parent?.page_id === parentPageId
+            db.title &&
+            db.title[0] &&
+            db.title[0].plain_text === dbTitle &&
+            db.parent &&
+            db.parent.page_id === parentPageId
         );
+
 
         if (foundDb) {
             console.log(`Base de dados encontrada: '${dbTitle}' (ID: ${foundDb.id})`);
