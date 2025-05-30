@@ -2,7 +2,7 @@
 require("dotenv").config();
 const express = require("express");
 const { Client } = require("@notionhq/client");
-const { createEnhancedNotionBlocks, parseRichText } = require("./formatter"); // Importar parseRichText se Verso for bloco
+const { createEnhancedNotionBlocks, parseRichText, getEmojiForCallout } = require("./formatter"); // Importar parseRichText se resposta for bloco
 
 const app = express();
 app.use(express.json());
@@ -45,9 +45,10 @@ async function findOrCreatePage(notionClient, title, parentPageId = null) {
                 parent: parentPageId ? { page_id: parentPageId } : { type: "workspace", workspace: true },
                 properties: {
                     title: {
-                        title: [{ type: "text", text: { content: title } }]
-                    }
-                }
+                        title: [{ type: "text", text: { content: title } }],
+                    },
+                },
+                icon: { type: "emoji", emoji: getEmojiForCallout(title) },
             };
             const newPage = await notionClient.pages.create(createParams);
             console.log(`Página criada: '${title}' (ID: ${newPage.id})`);
@@ -74,8 +75,8 @@ function getDatabaseSchema(type) {
         case "flashcard":
             // Schema para Flashcards
             return {
-                Frente: { title: {} }, // Coluna Title obrigatória
-                Verso: { rich_text: {} }, // Coluna para o verso
+                pergunta: { title: {} }, // Coluna Title obrigatória
+                resposta: { rich_text: {} }, // Coluna para o resposta
                 Tema: { multi_select: { options: [] } }, // Opcional, pode ser preenchido com o 'tema' geral
                 "Data Revisão": { date: {} }, // Para controle de revisão espaçada, se desejado
                 Tags: { multi_select: { options: [] } }, // Tags gerais
@@ -134,7 +135,8 @@ async function findOrCreateDatabase(notionClient, dbTitle, parentPageId, content
                 parent: { page_id: parentPageId },
                 title: [{ type: "text", text: { content: dbTitle } }],
                 properties: getDatabaseSchema(contentType),
-                is_inline: false
+                is_inline: false,
+                icon: { type: "emoji", emoji: getEmojiForCallout(dbTitle) },
             });
             console.log(`Base de dados criada: '${dbTitle}' (ID: ${newDb.id})`);
             return newDb.id;
@@ -177,7 +179,7 @@ app.post("/create-notion-content", async (req, res) => {
         const pageProperties = {};
         const dbSchema = getDatabaseSchema(tipo);
         const titlePropertyName = Object.keys(dbSchema).find(key => dbSchema[key].title);
-        const pageTitleContent = `${tipo} - ${subtitulo} - ${(data ? new Date(data) : new Date()).toLocaleDateString("pt-BR")}`;
+        const pageTitleContent = `${subtitulo} - ${(data ? new Date(data) : new Date()).toLocaleDateString("pt-BR")}`;
 
         if (titlePropertyName) {
             pageProperties[titlePropertyName] = { title: [{ text: { content: pageTitleContent } }] };
@@ -215,6 +217,8 @@ app.post("/create-notion-content", async (req, res) => {
         const newPage = await notion.pages.create({
             parent: { database_id: databaseId },
             properties: pageProperties,
+            icon: { type: "emoji", emoji: getEmojiForCallout(subtitulo) },
+
             children: contentBlocks,
         });
         console.log(`Página de conteúdo criada com sucesso: ID ${newPage.id}, URL: ${newPage.url}`);
@@ -238,7 +242,7 @@ app.post("/create-notion-flashcards", async (req, res) => {
         nome_database,
         tema,
         tipo = "Flashcards", // Esperado que seja 'Flashcards' ou similar
-        Flashcards, // Array de objetos { frente, verso }
+        Flashcards, // Array de objetos { pergunta, resposta }
         tags,
         data
         // subtitulo é ignorado para flashcards
@@ -252,9 +256,9 @@ app.post("/create-notion-flashcards", async (req, res) => {
         });
     }
 
-    // Valida se cada item no array Flashcards tem 'frente' e 'verso'
-    if (!Flashcards.every(fc => fc && typeof fc.frente === 'string' && typeof fc.verso === 'string')) {
-        return res.status(400).json({ error: "Formato inválido no array 'Flashcards'. Cada item deve ter 'frente' e 'verso' como strings." });
+    // Valida se cada item no array Flashcards tem 'pergunta' e 'resposta'
+    if (!Flashcards.every(fc => fc && typeof fc.pergunta === 'string' && typeof fc.resposta === 'string')) {
+        return res.status(400).json({ error: "Formato inválido no array 'Flashcards'. Cada item deve ter 'pergunta' e 'resposta' como strings." });
     }
 
     // Inicializa cliente Notion com o token do request
@@ -295,12 +299,12 @@ app.post("/create-notion-flashcards", async (req, res) => {
             }
         }
 
-        // Identificar nomes das propriedades 'Frente' (Title) e 'Verso' (Rich Text)
-        const frentePropertyName = Object.keys(dbSchema).find(key => dbSchema[key].title); // Propriedade Title
-        const versoPropertyName = Object.keys(dbSchema).find(key => key.toLowerCase() === 'verso' && dbSchema[key].rich_text);
+        // Identificar nomes das propriedades 'pergunta' (Title) e 'resposta' (Rich Text)
+        const perguntaPropertyName = Object.keys(dbSchema).find(key => dbSchema[key].title); // Propriedade Title
+        const respostaPropertyName = Object.keys(dbSchema).find(key => key.toLowerCase() === 'resposta' && dbSchema[key].rich_text);
 
-        if (!frentePropertyName || !versoPropertyName) {
-            throw new Error("Schema da base de dados de Flashcards inválido. Propriedades 'Frente' (title) e 'Verso' (rich_text) não encontradas.");
+        if (!perguntaPropertyName || !respostaPropertyName) {
+            throw new Error("Schema da base de dados de Flashcards inválido. Propriedades 'pergunta' (title) e 'resposta' (rich_text) não encontradas.");
         }
 
         // 4. Iterar e Criar cada Flashcard
@@ -308,27 +312,27 @@ app.post("/create-notion-flashcards", async (req, res) => {
         for (const flashcard of Flashcards) {
             const flashcardProperties = { ...commonProperties }; // Copia propriedades comuns
 
-            // Adiciona Frente (Title)
-            flashcardProperties[frentePropertyName] = { title: [{ text: { content: flashcard.frente } }] };
+            // Adiciona pergunta (Title)
+            flashcardProperties[perguntaPropertyName] = { title: [{ text: { content: flashcard.pergunta } }] };
 
-            // Adiciona Verso (Rich Text)
-            // Usando parseRichText para permitir links simples no verso, mas não formatação complexa
-            flashcardProperties[versoPropertyName] = { rich_text: parseRichText(flashcard.verso) };
+            // Adiciona resposta (Rich Text)
+            // Usando parseRichText para permitir links simples no resposta, mas não formatação complexa
+            flashcardProperties[respostaPropertyName] = { rich_text: parseRichText(flashcard.resposta) };
 
             try {
-                console.log(`Criando flashcard '${flashcard.frente}' na base de dados ID: ${databaseId}`);
+                console.log(`Criando flashcard '${flashcard.pergunta}' na base de dados ID: ${databaseId}`);
                 const newFlashcardPage = await notion.pages.create({
                     parent: { database_id: databaseId },
                     properties: flashcardProperties,
-                    // Flashcards geralmente não têm 'children' blocos, o verso está na propriedade
+                    // Flashcards geralmente não têm 'children' blocos, o resposta está na propriedade
                 });
                 console.log(`Flashcard criado: ID ${newFlashcardPage.id}, URL: ${newFlashcardPage.url}`);
-                createdFlashcardsInfo.push({ frente: flashcard.frente, url: newFlashcardPage.url });
+                createdFlashcardsInfo.push({ pergunta: flashcard.pergunta, url: newFlashcardPage.url });
             } catch (flashcardError) {
-                console.error(`Erro ao criar flashcard '${flashcard.frente}':`, flashcardError.body || flashcardError.message);
+                console.error(`Erro ao criar flashcard '${flashcard.pergunta}':`, flashcardError.body || flashcardError.message);
                 // Decide se continua ou para em caso de erro em um flashcard
                 // Por enquanto, loga o erro e continua com os próximos
-                createdFlashcardsInfo.push({ frente: flashcard.frente, error: flashcardError.message || "Erro desconhecido" });
+                createdFlashcardsInfo.push({ pergunta: flashcard.pergunta, error: flashcardError.message || "Erro desconhecido" });
             }
         }
 

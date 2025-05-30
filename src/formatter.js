@@ -190,7 +190,7 @@ function createEnhancedNotionBlocks(content) {
                     callout: {
                         icon: { type: "emoji", emoji: emoji },
                         // Combina título e conteúdo para o rich_text do callout
-                        rich_text: parseRichText(`**${calloutTitle}:** ${calloutContent}`),
+                        rich_text: parseRichText(`${calloutTitle}: ${calloutContent}`),
                     },
                 });
                 i++;
@@ -226,6 +226,7 @@ function parseRichText(text) {
     let lastIndex = 0;
     let match;
 
+    text   = text.replace(/\**/g, "");
     // Itera sobre as URLs encontradas
     while ((match = urlRegex.exec(text)) !== null) {
         // Adiciona o texto antes da URL, se houver
@@ -261,7 +262,7 @@ function getEmojiForCallout(title) {
     const lowerTitle = title.toLowerCase();
 
     // TECNOLOGIA E DESENVOLVIMENTO
-    if (lowerTitle.includes("arquitetura")) return "🏛️";
+    if (lowerTitle.includes("arquitetura de software")) return "🏛️";
     if (lowerTitle.includes("design")) return "🎨";
     if (lowerTitle.includes("padrão") || lowerTitle.includes("pattern")) return "📐";
     if (lowerTitle.includes("estrutura")) return "🧱";
@@ -270,6 +271,7 @@ function getEmojiForCallout(title) {
     if (lowerTitle.includes("microserviço") || lowerTitle.includes("microservice")) return "🧩";
     if (lowerTitle.includes("serverless")) return "☁️";
     if (lowerTitle.includes("api")) return "🔌";
+    if (lowerTitle.includes("onion")) return "🧅";
     if (lowerTitle.includes("rest")) return "🔄";
     if (lowerTitle.includes("graphql")) return "📊";
     if (lowerTitle.includes("mvc")) return "🔺";
@@ -578,5 +580,5 @@ function getColorBasedOnText(headingText) {
 }
 
 // Exporta as funções necessárias para o index.js
-module.exports = { createEnhancedNotionBlocks, parseRichText };
+module.exports = { createEnhancedNotionBlocks, parseRichText, getEmojiForCallout };
 
