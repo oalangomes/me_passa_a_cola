@@ -1,4 +1,4 @@
-// index.js - Com endpoint para Flashcards
+// index.js - Com endpoint para flashcards
 require("dotenv").config();
 const express = require("express");
 const { Client } = require("@notionhq/client");
@@ -48,6 +48,8 @@ async function findOrCreatePage(notionClient, title, parentPageId = null) {
                         title: [{ type: "text", text: { content: title } }],
                     },
                 },
+                description: [{ type: "text", text: { content: `Página destinada ao assunto ${title}` } }],
+
                 icon: { type: "emoji", emoji: getEmojiForCallout(title) },
             };
             const newPage = await notionClient.pages.create(createParams);
@@ -73,7 +75,7 @@ function getDatabaseSchema(type) {
 
     switch (normalizedType) {
         case "flashcard":
-            // Schema para Flashcards
+            // Schema para flashcards
             return {
                 pergunta: { title: {} }, // Coluna Title obrigatória
                 resposta: { rich_text: {} }, // Coluna para o resposta
@@ -135,6 +137,7 @@ async function findOrCreateDatabase(notionClient, dbTitle, parentPageId, content
                 parent: { page_id: parentPageId },
                 title: [{ type: "text", text: { content: dbTitle } }],
                 properties: getDatabaseSchema(contentType),
+                description: [{ type: "text", text: { content: `Base de dados para ${dbTitle}` } }],
                 is_inline: false,
                 icon: { type: "emoji", emoji: getEmojiForCallout(dbTitle) },
             });
@@ -233,7 +236,7 @@ app.post("/create-notion-content", async (req, res) => {
     }
 });
 
-// --- Nova Rota para Flashcards --- //
+// --- Nova Rota para flashcards --- //
 
 app.post("/create-notion-flashcards", async (req, res) => {
     console.log("Recebida requisição para /create-notion-flashcards");
@@ -241,42 +244,42 @@ app.post("/create-notion-flashcards", async (req, res) => {
         notion_token,
         nome_database,
         tema,
-        tipo = "Flashcards", // Esperado que seja 'Flashcards' ou similar
-        Flashcards, // Array de objetos { pergunta, resposta }
+        tipo = "flashcards", // Esperado que seja 'flashcards' ou similar
+        flashcards, // Array de objetos { pergunta, resposta }
         tags,
         data
         // subtitulo é ignorado para flashcards
     } = req.body;
 
     // Validação dos campos obrigatórios para flashcards
-    if (!notion_token || !nome_database || !tema || !Flashcards || !Array.isArray(Flashcards) || Flashcards.length === 0) {
+    if (!notion_token || !nome_database || !tema || !flashcards || !Array.isArray(flashcards) || flashcards.length === 0) {
         console.error("Erro: Dados incompletos ou inválidos na requisição de flashcards.", req.body);
         return res.status(400).json({
-            error: "Dados incompletos ou inválidos: notion_token, nome_database, tema e um array 'Flashcards' não vazio são obrigatórios.",
+            error: "Dados incompletos ou inválidos: notion_token, nome_database, tema e um array 'flashcards' não vazio são obrigatórios.",
         });
     }
 
-    // Valida se cada item no array Flashcards tem 'pergunta' e 'resposta'
-    if (!Flashcards.every(fc => fc && typeof fc.pergunta === 'string' && typeof fc.resposta === 'string')) {
-        return res.status(400).json({ error: "Formato inválido no array 'Flashcards'. Cada item deve ter 'pergunta' e 'resposta' como strings." });
+    // Valida se cada item no array flashcards tem 'pergunta' e 'resposta'
+    if (!flashcards.every(fc => fc && typeof fc.pergunta === 'string' && typeof fc.resposta === 'string')) {
+        return res.status(400).json({ error: "Formato inválido no array 'flashcards'. Cada item deve ter 'pergunta' e 'resposta' como strings." });
     }
 
     // Inicializa cliente Notion com o token do request
     const notion = new Client({ auth: notion_token });
 
     try {
-        console.log(`Iniciando processo para criar ${Flashcards.length} flashcards em DB: ${nome_database}, Tema: ${tema}`);
+        console.log(`Iniciando processo para criar ${flashcards.length} flashcards em DB: ${nome_database}, Tema: ${tema}`);
 
         // 1. Encontrar/Criar Página Root e Tema (reutiliza lógica)
         const rootPageId = await findOrCreatePage(notion, ROOT_PAGE_TITLE);
         const themePageId = await findOrCreatePage(notion, tema, rootPageId);
 
-        // 2. Encontrar/Criar Base de Dados (reutiliza lógica, passando 'Flashcards' como tipo para schema)
-        const databaseId = await findOrCreateDatabase(notion, nome_database, themePageId, "Flashcards");
+        // 2. Encontrar/Criar Base de Dados (reutiliza lógica, passando 'flashcards' como tipo para schema)
+        const databaseId = await findOrCreateDatabase(notion, nome_database, themePageId, "flashcards");
 
         // 3. Preparar propriedades comuns (Tags e Data)
         const commonProperties = {};
-        const dbSchema = getDatabaseSchema("Flashcards"); // Pega o schema específico
+        const dbSchema = getDatabaseSchema("flashcards"); // Pega o schema específico
 
         // -- Data Comum --
         const datePropertyName = Object.keys(dbSchema).find(key => key.toLowerCase() === 'data'); // Procura por 'Data'
@@ -304,12 +307,12 @@ app.post("/create-notion-flashcards", async (req, res) => {
         const respostaPropertyName = Object.keys(dbSchema).find(key => key.toLowerCase() === 'resposta' && dbSchema[key].rich_text);
 
         if (!perguntaPropertyName || !respostaPropertyName) {
-            throw new Error("Schema da base de dados de Flashcards inválido. Propriedades 'pergunta' (title) e 'resposta' (rich_text) não encontradas.");
+            throw new Error("Schema da base de dados de flashcards inválido. Propriedades 'pergunta' (title) e 'resposta' (rich_text) não encontradas.");
         }
 
         // 4. Iterar e Criar cada Flashcard
         const createdFlashcardsInfo = [];
-        for (const flashcard of Flashcards) {
+        for (const flashcard of flashcards) {
             const flashcardProperties = { ...commonProperties }; // Copia propriedades comuns
 
             // Adiciona pergunta (Title)
@@ -324,7 +327,7 @@ app.post("/create-notion-flashcards", async (req, res) => {
                 const newFlashcardPage = await notion.pages.create({
                     parent: { database_id: databaseId },
                     properties: flashcardProperties,
-                    // Flashcards geralmente não têm 'children' blocos, o resposta está na propriedade
+                    // flashcards geralmente não têm 'children' blocos, o resposta está na propriedade
                 });
                 console.log(`Flashcard criado: ID ${newFlashcardPage.id}, URL: ${newFlashcardPage.url}`);
                 createdFlashcardsInfo.push({ pergunta: flashcard.pergunta, url: newFlashcardPage.url });
