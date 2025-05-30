@@ -6,9 +6,7 @@
     "version": "v1.0.0"
   },
   "servers": [
-    {
-      "url": "https://me-passa-a-cola.onrender.com"
-    }
+    { "url": "https://me-passa-a-cola.onrender.com" }
   ],
   "paths": {
     "/create-notion-content": {
@@ -20,41 +18,13 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "notion_token": {
-                    "type": "string",
-                    "description": "Token da integração do Notion (ntn_...)"
-                  },  
-                  "nome_database": {
-                    "type": "string",
-                    "description": "Nome Da Base"
-                  },
-                  "tema": { "type": "string" },
-                  "subtitulo": { "type": "string" },
-                  "tipo": { "type": "string" },
-                  "resumo": { "type": "string" },
-                  "observacoes": { "type": "string" },
-                  "tags": { "type": "string" },
-                  "data": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
-                  "destino": {
-                    "type": "string",
-                    "description": "Destino do envio: 'notion'",
-                    "enum": ["notion"]
-                  }
-                },
-                "required": ["destino", "tema", "resumo"]
+                "$ref": "#/components/schemas/NotionContent"
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Sucesso"
-          }
+          "200": { "description": "Sucesso" }
         }
       }
     },
@@ -67,47 +37,80 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "notion_token": {
-                    "type": "string",
-                    "description": "Token da integração do Notion (ntn_...)"
-                  },  
-                  "nome_database": {
-                    "type": "string",
-                    "description": "Nome Da Base"
-                  },
-                  "tema": { "type": "string" },
-                  "subtitulo": { "type": "string" },
-                  "tipo": { "type": "string" },
-                 "flashcards": [
-                    {
-                      "pergunta": { "type": "string" },
-                      "resposta": { "type": "string" }
-                    }
-                  ],
-                  "observacoes": { "type": "string" },
-                  "tags": { "type": "string" },
-                  "data": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
-                  "destino": {
-                    "type": "string",
-                    "description": "Destino do envio: 'notion'",
-                    "enum": ["notion"]
-                  }
-                },
-                "required": ["destino", "tema", "resumo"]
+                "$ref": "#/components/schemas/NotionFlashcards"
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Sucesso"
-          }
+          "200": { "description": "Sucesso" }
         }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "NotionContent": {
+        "type": "object",
+        "properties": {
+          "notion_token": {
+            "type": "string",
+            "description": "Token da integração do Notion (ntn_...)"
+          },
+          "nome_database": {
+            "type": "string",
+            "description": "Nome Da Base"
+          },
+          "tema": { "type": "string" },
+          "subtitulo": { "type": "string" },
+          "tipo": { "type": "string" },
+          "resumo": { "type": "string" },
+          "observacoes": { "type": "string" },
+          "tags": { "type": "string" },
+          "data": { "type": "string", "format": "date-time" },
+          "destino": {
+            "type": "string",
+            "description": "Destino do envio: 'notion'",
+            "enum": ["notion"]
+          }
+        },
+        "required": ["destino", "tema", "resumo"]
+      },
+      "NotionFlashcards": {
+        "type": "object",
+        "properties": {
+          "notion_token": {
+            "type": "string",
+            "description": "Token da integração do Notion (ntn_...)"
+          },
+          "nome_database": {
+            "type": "string",
+            "description": "Nome Da Base"
+          },
+          "tema": { "type": "string" },
+          "subtitulo": { "type": "string" },
+          "tipo": { "type": "string" },
+          "flashcards": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "pergunta": { "type": "string" },
+                "resposta": { "type": "string" }
+              },
+              "required": ["pergunta", "resposta"]
+            }
+          },
+          "observacoes": { "type": "string" },
+          "tags": { "type": "string" },
+          "data": { "type": "string", "format": "date-time" },
+          "destino": {
+            "type": "string",
+            "description": "Destino do envio: 'notion'",
+            "enum": ["notion"]
+          }
+        },
+        "required": ["destino", "tema", "flashcards"]
       }
     }
   }
