@@ -41,8 +41,7 @@ function createEnhancedNotionBlocks(content) {
                 } else if (line.startsWith("## ")) {
                     headingLevel = 2;
                     headingText = line.substring(3);
-                } else if (line.startsWith("### ")) {
-                    headingLevel = 3;
+                } else if (line.startsWith("### ") || line.startsWith("#### ")  || line.startsWith("# ### ")) {
                     headingText = line.substring(4);
                 } else if (headingMatch[1] && headingMatch[1].match(/[\p{Emoji_Presentation}\p{Emoji}]/u)) {
                     // Linha começa com emoji, tratar como h3
@@ -123,7 +122,7 @@ function createEnhancedNotionBlocks(content) {
                     type: "bulleted_list_item",
                     bulleted_list_item: {
                         rich_text: parseRichText(bulletMatch[2]),
-                    },
+                    }
                 });
                 i++;
                 continue;
