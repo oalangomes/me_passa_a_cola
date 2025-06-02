@@ -41,7 +41,7 @@ function createEnhancedNotionBlocks(content) {
                 } else if (line.startsWith("## ")) {
                     headingLevel = 2;
                     headingText = line.substring(3);
-                } else if (line.startsWith("### ") || line.startsWith("#### ")  || line.startsWith("# ### ")) {
+                } else if (line.startsWith("### ") || line.startsWith("#### ") || line.startsWith("# ### ")) {
                     headingText = line.substring(4);
                 } else if (headingMatch[1] && headingMatch[1].match(/[\p{Emoji_Presentation}\p{Emoji}]/u)) {
                     // Linha começa com emoji, tratar como h3
@@ -74,32 +74,36 @@ function createEnhancedNotionBlocks(content) {
             }
 
             // Detecção de Tabelas Markdown (simplificada)
+            // Detecção de Tabelas Markdown (ajustada)
+            // Detecção de Tabelas Markdown (corrigido Notion)
             if (line.includes("|") && i + 1 < lines.length && lines[i + 1].includes("|") && lines[i + 1].includes("-")) {
                 const headerLine = lines[i];
                 const separatorLine = lines[i + 1];
-                const headers = headerLine.split("|").map((h) => h.trim()).filter(Boolean);
-                const separatorCols = separatorLine.split("|").map((s) => s.trim()).filter(Boolean);
+                const headers = headerLine.trim().replace(/^\||\|$/g, '').split("|").map(h => h.trim());
+                const separatorCols = separatorLine.trim().replace(/^\||\|$/g, '').split("|").map(s => s.trim());
 
-                // Verifica se é uma linha separadora válida
-                if (headers.length > 0 && headers.length === separatorCols.length && separatorCols.every((s) => /^-+$/.test(s))) {
+                if (headers.length > 0 && headers.length === separatorCols.length && separatorCols.every(s => /^-+$/.test(s))) {
                     const tableRows = [];
-                    // Adiciona linha de cabeçalho
+                    // Header
                     tableRows.push({
                         type: "table_row",
-                        cells: headers.map((header) => [{ type: "text", text: { content: header } }]),
+                        table_row: {
+                            cells: headers.map(header => [{ type: "text", text: { content: header } }])
+                        }
                     });
-                    i += 2; // Pula cabeçalho e separador
-                    // Adiciona linhas de dados
+                    i += 2; // Pula header + separador
+                    // Dados
                     while (i < lines.length && lines[i].includes("|")) {
-                        const dataCells = lines[i].split("|").map((c) => c.trim()).filter(Boolean);
-                        // Garante que haja conteúdo para cada coluna do cabeçalho
-                        const cellsContent = headers.map((_, colIndex) => {
-                            return [{ type: "text", text: { content: dataCells[colIndex] || "" } }];
+                        const dataCells = lines[i].trim().replace(/^\||\|$/g, '').split("|").map(c => c.trim());
+                        const cellsContent = headers.map((_, colIndex) => [
+                            { type: "text", text: { content: dataCells[colIndex] || "" } }
+                        ]);
+                        tableRows.push({
+                            type: "table_row",
+                            table_row: { cells: cellsContent }
                         });
-                        tableRows.push({ type: "table_row", cells: cellsContent });
                         i++;
                     }
-                    // Cria o bloco de tabela
                     blocks.push({
                         object: "block",
                         type: "table",
@@ -110,9 +114,11 @@ function createEnhancedNotionBlocks(content) {
                             children: tableRows,
                         },
                     });
-                    continue; // Próxima linha após a tabela
+                    continue;
                 }
             }
+
+
 
             // Detecção de Lista com Marcadores (* ou -)
             const bulletMatch = line.match(/^([*-])\s+(.*)/);
@@ -225,7 +231,7 @@ function parseRichText(text) {
     let lastIndex = 0;
     let match;
 
-    text   = text.replace(/\**/g, "");
+    text = text.replace(/\**/g, "");
     // Itera sobre as URLs encontradas
     while ((match = urlRegex.exec(text)) !== null) {
         // Adiciona o texto antes da URL, se houver

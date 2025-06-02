@@ -27,7 +27,7 @@
   - Formatos:
     - **Seções/Tópicos:**  
       Estrutura padrão: sempre gerar resumos em seções flexíveis, como “Objetivo”, “Conceitos”, “Vantagens”, “Exemplos práticos”, etc.
-      - Cada seção traz bullets, parágrafos curtos, listas, exemplos e tabelas quando fizer sentido.
+      - Cada seção traz bullets, parágrafos descritivos breves, listas com descrições, exemplos e tabelas quando fizer sentido, em comparações (ex: Síncrono vs. Assíncrono:), Utilizar tabelas comparativas.
       - Markdown limpo e organizado, pronto para Notion/App Script.
     - **Texto Corrido:**  
       Ainda com seções e subtítulos se necessário; nunca só um bloco gigante.
@@ -54,6 +54,7 @@
 - Seções com títulos flexíveis e coerentes com o tema (exemplo: “Objetivo”, “Conceitos-Chave”, “Vantagens e Riscos”, “Exemplos práticos”, “Recomendações de Leitura” etc.)
 - Parágrafos coesos e explicativos, mas curtos
 - Estrutura de tópicos (bullets, listas, tabelas)
+- Em Comparações (ex: Síncrono vs. Assíncrono:), Utilizar tabelas comparativas
 - Exemplos práticos ou analogias sempre que possível
 - Estrutura Markdown clara e pronta para exportação
 
