@@ -1,367 +1,352 @@
-// index.js - Com endpoint para flashcards
-require("dotenv").config();
-const express = require("express");
-const { Client } = require("@notionhq/client");
-const { createEnhancedNotionBlocks, parseRichText, getEmojiForCallout } = require("./formatter"); // Importar parseRichText se resposta for bloco
+// index.js
+const express = require('express');
+const { Client } = require('@notionhq/client');
+const { createEnhancedNotionBlocks, getEmojiForCallout } = require('./formatter');
 
 const app = express();
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
-const ROOT_PAGE_TITLE = "Me Passa A Cola (GPT)";
+// Utilidade: Buscar database pelo nome
+async function searchDatabaseByName(notion, dbName) {
+  const response = await notion.search({
+    query: dbName,
+    filter: { property: "object", value: "database" }
+  });
+  return response.results.find(db =>
+    db.object === "database" &&
+    db.title &&
+    db.title[0] &&
+    db.title[0].plain_text === dbName
+  );
+}
 
-// --- Funções Auxiliares (findOrCreatePage, getDatabaseSchema, findOrCreateDatabase - sem alterações) --- //
+// Utilidade: Buscar página pelo título dentro do database
+async function searchPageByTitle(notion, databaseId, title) {
+  const response = await notion.databases.query({
+    database_id: databaseId,
+    filter: {
+      property: "title",
+      title: { equals: title }
+    }
+  });
+  return response.results.length > 0 ? response.results[0] : null;
+}
 
+// Utilidade: Buscar/cadastrar tags por nome (usando options do banco)
 /**
- * Encontra ou cria uma página no Notion.
- * @param {Client} notionClient - Instância do cliente Notion autenticado.
- * @param {string} title - Título da página a ser encontrada/criada.
- * @param {string|null} parentPageId - ID da página pai (null para criar na raiz do workspace).
- * @returns {Promise<string>} - ID da página encontrada ou criada.
+ * Busca/cria opções de multi_select (tags) por nome, sempre retornando com ID e name.
+ * Se alguma tag não existir, cria antes no schema do banco e retorna já pronta pra página.
+ *
+ * @param {Client} notion - Instância do Notion API.
+ * @param {string} databaseId - ID do database.
+ * @param {string[]|string} tagNames - Lista de nomes de tags ou string única/com vírgula.
+ * @returns {Promise<Array<{id: string, name: string}>>}
  */
-async function findOrCreatePage(notionClient, title, parentPageId = null) {
-    try {
-        const searchResponse = await notionClient.search({
-            query: title,
-            filter: { property: "object", value: "page" },
-            page_size: 10
-        });
+async function getOrCreateTags(notion, databaseId, tagNames) {
+  // Garante array limpo
+  if (!Array.isArray(tagNames)) {
+    if (!tagNames) tagNames = [];
+    else if (typeof tagNames === "string") tagNames = tagNames.split(",").map(t => t.trim()).filter(Boolean);
+    else tagNames = [String(tagNames)];
+  }
 
-        let foundPage = searchResponse.results.find(page =>
-            page.properties &&
-            page.properties.title &&
-            page.properties.title.title &&
-            page.properties.title.title[0] &&
-            page.properties.title.title[0].plain_text === title &&
-            (parentPageId ? page.parent && page.parent.page_id === parentPageId : page.parent && page.parent.type === "workspace")
-        );
+  // 1. Busca o schema do banco
+  const db = await notion.databases.retrieve({ database_id: databaseId });
 
-        if (foundPage) {
-            console.log(`Página encontrada: '${title}' (ID: ${foundPage.id})`);
-            return foundPage.id;
-        } else {
-            console.log(`Página '${title}' não encontrada. Criando...`);
-            const createParams = {
-                parent: parentPageId ? { page_id: parentPageId } : { type: "workspace", workspace: true },
-                properties: {
-                    title: {
-                        title: [{ type: "text", text: { content: title } }],
-                    },
-                },
-                description: [{ type: "text", text: { content: `Página destinada ao assunto ${title}` } }],
+  // 2. Encontra o campo multi_select de tags
+  const tagPropEntry = Object.entries(db.properties).find(
+    ([key, val]) => val.type === "multi_select" && key.toLowerCase().includes("tag")
+  );
+  if (!tagPropEntry) return [];
 
-                icon: { type: "emoji", emoji: getEmojiForCallout(title) },
-            };
-            const newPage = await notionClient.pages.create(createParams);
-            console.log(`Página criada: '${title}' (ID: ${newPage.id})`);
-            return newPage.id;
+  const tagPropName = tagPropEntry[0];
+  let options = tagPropEntry[1].multi_select.options || [];
+
+  // 3. Descobre quais tags faltam (ainda não existem)
+  const tagsQueFaltam = tagNames.filter(tagName =>
+    !options.some(opt => opt.name.toLowerCase() === tagName.toLowerCase())
+  );
+
+  // 4. Se precisar criar novas tags, atualiza o schema
+  if (tagsQueFaltam.length) {
+    await notion.databases.update({
+      database_id: databaseId,
+      properties: {
+        [tagPropName]: {
+          multi_select: {
+            options: [
+              ...options,
+              ...tagsQueFaltam.map(t => ({
+                name: t,
+                color: "default"
+              }))
+            ]
+          }
         }
-    } catch (error) {
-        console.error(`Erro ao encontrar/criar página '${title}':`, error.body || error.message);
-        throw new Error(`Falha ao processar página '${title}'`);
-    }
+      }
+    });
+    // Atualiza as opções, agora já com os novos IDs
+    const dbAtualizado = await notion.databases.retrieve({ database_id: databaseId });
+    options = dbAtualizado.properties[tagPropName].multi_select.options;
+  }
+
+  // 5. Sempre retorna a lista de tags com id+name (usando options atualizadas)
+  return tagNames.map(tagName => {
+    const found = options.find(o => o.name.toLowerCase() === tagName.toLowerCase());
+    return found ? { id: found.id, name: found.name } : { name: tagName };
+  });
 }
 
-/**
- * Define o esquema padrão para um tipo de base de dados.
- * @param {string} type - Tipo de conteúdo (Resumo, Flashcard, Código, etc.).
- * @returns {object} - Objeto de propriedades para a criação da base de dados.
- */
-function getDatabaseSchema(type) {
-    const normalizedType = type.toLowerCase().includes("resumo") ? "resumo" :
-        type.toLowerCase().includes("flashcard") ? "flashcard" :
-            type.toLowerCase().includes("código") || type.toLowerCase().includes("aplicação") ? "código" :
-                "padrão";
+module.exports = { getOrCreateTags };
 
-    switch (normalizedType) {
-        case "flashcard":
-            // Schema para flashcards
-            return {
-                pergunta: { title: {} }, // Coluna Title obrigatória
-                resposta: { rich_text: {} }, // Coluna para o resposta
-                Tema: { multi_select: { options: [] } }, // Opcional, pode ser preenchido com o 'tema' geral
-                "Data Revisão": { date: {} }, // Para controle de revisão espaçada, se desejado
-                Tags: { multi_select: { options: [] } }, // Tags gerais
-                Data: { date: {} } // Data de criação/referência
-            };
-        case "código":
-            return {
-                Nome: { title: {} },
-                Linguagem: { select: { options: [] } },
-                Descrição: { rich_text: {} },
-                Tags: { multi_select: { options: [] } },
-                Data: { date: {} }
-            };
-        case "resumo":
-        default:
-            return {
-                Título: { title: {} },
-                Subtítulo: { rich_text: {} },
-                Tags: { multi_select: { options: [] } },
-                Data: { date: {} }
-            };
-    }
+
+
+// Helper para garantir que só manda propriedades válidas
+function filterValidProperties(inputProps, dbProperties) {
+  if (!inputProps) return {};
+  const dbPropKeys = Object.keys(dbProperties);
+  return Object.fromEntries(
+    Object.entries(inputProps)
+      .filter(([key]) => dbPropKeys.includes(key))
+  );
 }
 
-/**
- * Encontra ou cria uma base de dados no Notion.
- * @param {Client} notionClient - Instância do cliente Notion autenticado.
- * @param {string} dbTitle - Título EXATO da base de dados (vem do request.nome_database).
- * @param {string} parentPageId - ID da página pai onde a base será criada.
- * @param {string} contentType - Tipo de conteúdo original do request (usado APENAS para definir o schema se precisar criar).
- * @returns {Promise<string>} - ID da base de dados encontrada ou criada.
- */
-async function findOrCreateDatabase(notionClient, dbTitle, parentPageId, contentType) {
-    try {
-        const searchResponse = await notionClient.search({
-            query: dbTitle,
-            filter: { property: "object", value: "database" },
-            page_size: 10
-        });
+// Criação de páginas, subpáginas e artigos (mantendo a hierarquia)
+async function getOrCreatePage({
+  notion,
+  databaseName,
+  pageTitle,
+  tags = [],
+  parentTitle = null,
+  asSubpage = false,
+  contentMd = "",
+  otherProps = {}
+}) {
+  // 1. Busca o database principal pelo nome
+  const db = await searchDatabaseByName(notion, databaseName);
+  if (!db) throw new Error("Database não encontrado: " + databaseName);
 
-        let foundDb = searchResponse.results.find(db =>
-            db.title &&
-            db.title[0] &&
-            db.title[0].plain_text === dbTitle &&
-            db.parent &&
-            db.parent.page_id === parentPageId
-        );
+  // 2. Nome do campo de título (title)
+  const titlePropName = Object.entries(db.properties).find(
+    ([, val]) => val.type === "title"
+  )[0];
 
+  // 3. Nome do campo tags (multi_select)
+  const tagPropName = Object.entries(db.properties).find(
+    ([, val]) => val.type === "multi_select"
+  )?.[0];
 
-        if (foundDb) {
-            console.log(`Base de dados encontrada: '${dbTitle}' (ID: ${foundDb.id})`);
-            return foundDb.id;
-        } else {
-            console.log(`Base de dados '${dbTitle}' não encontrada. Criando...`);
-            const newDb = await notionClient.databases.create({
-                parent: { page_id: parentPageId },
-                title: [{ type: "text", text: { content: dbTitle } }],
-                properties: getDatabaseSchema(contentType),
-                description: [{ type: "text", text: { content: `Base de dados para ${dbTitle}` } }],
-                is_inline: false,
-                icon: { type: "emoji", emoji: getEmojiForCallout(dbTitle) },
-            });
-            console.log(`Base de dados criada: '${dbTitle}' (ID: ${newDb.id})`);
-            return newDb.id;
-        }
-    } catch (error) {
-        console.error(`Erro ao encontrar/criar base de dados '${dbTitle}':`, error.body || error.message);
-        throw new Error(`Falha ao processar base de dados '${dbTitle}'`);
-    }
+  // 4. Nome do campo relation correto (página principal)
+  const relationPropName = Object.entries(db.properties).find(
+    ([key, val]) => val.type === "relation" && key === "página principal"
+  )?.[0];
+
+  // 5. Busca parent (tema, se for subpágina)
+  let parentPage = null;
+  if (parentTitle) parentPage = await searchPageByTitle(notion, db.id, parentTitle);
+
+  // 6. Busca página pelo título (já existente)
+  let page = await searchPageByTitle(notion, db.id, pageTitle);
+
+  // 7. Garante as tags (ou array vazio)
+  const tagsReady = tagPropName ? await getOrCreateTags(notion, db.id, tags) : [];
+
+  // 8. Filtra outros campos para garantir que só manda o que o banco aceita
+  const validOtherProps = filterValidProperties(otherProps, db.properties);
+
+  const emoji = getEmojiForCallout(pageTitle);
+  const titleWithEmoji = emoji && !pageTitle.startsWith(emoji) ? `${emoji} ${pageTitle}` : pageTitle;
+
+  // 9. Monta as propriedades de forma dinâmica
+  const properties = {
+    [titlePropName]: { title: [{ text: { content: titleWithEmoji } }] },
+    ...(tagPropName && { [tagPropName]: { multi_select: tagsReady } }),
+    ...validOtherProps
+  };
+
+  // Só adiciona relation se for subpágina E parentPage E campo relation certo
+  if (asSubpage && parentPage && relationPropName) {
+    properties[relationPropName] = { relation: [{ id: parentPage.id }] };
+  }
+
+  // Debug visual (log bonito do que está indo pro Notion)
+  console.log("🚩 Properties enviadas para o Notion:", JSON.stringify(properties, null, 2));
+
+  // 10. Conteúdo como blocks Notion (usando formatter)
+  const childrenBlocks = contentMd ? createEnhancedNotionBlocks(contentMd) : [];
+
+  // 11. Cria se não existir, retorna sempre a página
+  if (!page) {
+    page = await notion.pages.create({
+      parent: { database_id: db.id },
+      properties,
+      children: childrenBlocks
+    });
+  }
+  return page;
 }
 
-// --- Rota para Resumos e Conteúdo Geral --- //
-
+// Endpoint principal
 app.post("/create-notion-content", async (req, res) => {
-    console.log("Recebida requisição para /create-notion-content");
+  try {
     const {
-        notion_token,
-        nome_database,
-        tema,
-        subtitulo,
-        tipo = "Resumo",
-        resumo,
-        tags,
-        data
+      notion_token,
+      nome_database = "Me Passa A Cola (GPT)",
+      tema,
+      subtitulo,
+      tipo = "Resumo",
+      resumo,
+      tags = [],
+      data,
+      as_subpage = false, // pode ignorar, vamos garantir pela lógica
+      parent_title,
+      ...outrasProps
     } = req.body;
 
-    if (!notion_token || !nome_database || !tema || !subtitulo || !resumo) {
-        return res.status(400).json({
-            error: "Dados incompletos: notion_token, nome_database, tema, subtitulo e resumo são obrigatórios.",
-        });
-    }
+    if (!notion_token) return res.status(400).json({ error: "Token do Notion é obrigatório." });
+    if (!tema && !subtitulo) return res.status(400).json({ error: "Tema ou subtítulo são obrigatórios." });
 
     const notion = new Client({ auth: notion_token });
 
-    try {
-        console.log(`Iniciando processo para DB: ${nome_database}, Tema: ${tema}, Tipo: ${tipo}, Subtítulo: ${subtitulo}`);
-        const rootPageId = await findOrCreatePage(notion, ROOT_PAGE_TITLE);
-        const themePageId = await findOrCreatePage(notion, tema, rootPageId);
-        const databaseId = await findOrCreateDatabase(notion, nome_database, themePageId, tipo);
-
-        const pageProperties = {};
-        const dbSchema = getDatabaseSchema(tipo);
-        const titlePropertyName = Object.keys(dbSchema).find(key => dbSchema[key].title);
-        const pageTitleContent = `${subtitulo} - ${(data ? new Date(data) : new Date()).toLocaleDateString("pt-BR")}`;
-
-        if (titlePropertyName) {
-            pageProperties[titlePropertyName] = { title: [{ text: { content: pageTitleContent } }] };
-        } else {
-            pageProperties["Nome"] = { title: [{ text: { content: pageTitleContent } }] };
-        }
-
-        const datePropertyName = Object.keys(dbSchema).find(key => dbSchema[key].date);
-        if (datePropertyName) {
-            try {
-                pageProperties[datePropertyName] = { date: { start: data ? new Date(data).toISOString() : new Date().toISOString() } };
-            } catch (dateError) {
-                console.warn(`Data inválida fornecida ('${data}'). Usando data atual.`);
-                pageProperties[datePropertyName] = { date: { start: new Date().toISOString() } };
-            }
-        }
-
-        const tagsPropertyName = Object.keys(dbSchema).find(key => key.toLowerCase() === 'tags' && dbSchema[key].multi_select);
-        if (tagsPropertyName && tags && typeof tags === 'string') {
-            const tagArray = tags.split(',').map(tag => ({ name: tag.trim() })).filter(tagObj => tagObj.name);
-            if (tagArray.length > 0) {
-                pageProperties[tagsPropertyName] = { multi_select: tagArray };
-            }
-        }
-
-        const subtitlePropertyName = Object.keys(dbSchema).find(key => key.toLowerCase() === 'subtítulo' && dbSchema[key].rich_text);
-        if (subtitlePropertyName && tipo.toLowerCase().includes("resumo")) {
-            pageProperties[subtitlePropertyName] = { rich_text: [{ text: { content: subtitulo } }] };
-        }
-
-        console.log("Processando conteúdo para blocos Notion...");
-        const contentBlocks = createEnhancedNotionBlocks(resumo);
-
-        console.log(`Criando página '${pageTitleContent}' na base de dados ID: ${databaseId}`);
-        const newPage = await notion.pages.create({
-            parent: { database_id: databaseId },
-            properties: pageProperties,
-            icon: { type: "emoji", emoji: getEmojiForCallout(subtitulo) },
-
-            children: contentBlocks,
-        });
-        console.log(`Página de conteúdo criada com sucesso: ID ${newPage.id}, URL: ${newPage.url}`);
-        res.status(201).json({ message: "Conteúdo criado no Notion com sucesso!", url: newPage.url });
-
-    } catch (error) {
-        console.error("Erro durante o processamento da requisição /create-notion-content:", error.body || error.message || error);
-        res.status(500).json({
-            error: "Erro interno ao processar a requisição.",
-            details: error.message || "Detalhes indisponíveis",
-        });
+    // 1. SEMPRE busca ou cria o tema (página principal), se informado
+    let temaPage = null;
+    if (tema) {
+      temaPage = await getOrCreatePage({
+        notion,
+        databaseName: nome_database,
+        pageTitle: tema,
+        tags,
+      });
     }
-});
 
-// --- Nova Rota para flashcards --- //
+    // 2. Cria subpágina SOMENTE se subtítulo for enviado
+    let contentPage = null;
+    if (subtitulo) {
+      let parentTitle = null;
+      let subpageFlag = false;
+
+      // Se tem tema, obrigatoriamente a subpágina será filha dele
+      if (temaPage) {
+        // Usa o mesmo título do tema encontrado/criado como parentTitle
+        parentTitle = temaPage.properties[Object.keys(temaPage.properties).find(k => temaPage.properties[k].type === "title")].title[0].plain_text;
+        subpageFlag = true;
+      }
+
+      // Se NÃO tem tema, cria página normalmente (root do banco)
+      contentPage = await getOrCreatePage({
+        notion,
+        databaseName: nome_database,
+        pageTitle: subtitulo,
+        tags,
+        parentTitle: parentTitle,
+        asSubpage: subpageFlag,
+        contentMd: resumo,
+        otherProps: {
+          ...(data && { Data: { date: { start: data } } }),
+          Tipo: { select: { name: tipo } },
+          ...outrasProps
+        }
+      });
+    }
+
+    res.json({
+      ok: true,
+      temaUrl: temaPage ? temaPage.url : undefined,
+      pageUrl: contentPage ? contentPage.url : undefined,
+      id: contentPage ? contentPage.id : temaPage ? temaPage.id : undefined,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.post("/create-notion-flashcards", async (req, res) => {
-    console.log("Recebida requisição para /create-notion-flashcards");
+  try {
     const {
-        notion_token,
-        nome_database,
-        tema,
-        tipo = "flashcards", // Esperado que seja 'flashcards' ou similar
-        flashcards, // Array de objetos { pergunta, resposta }
-        tags,
-        data
-        // subtitulo é ignorado para flashcards
+      notion_token,
+      nome_database = "Me Passa A Cola (GPT)",
+      tema,
+      subtitulo = "Flashcards",
+      tags = [],
+      flashcards = [],
+      data,
+      ...outrasProps
     } = req.body;
 
-    // Validação dos campos obrigatórios para flashcards
-    if (!notion_token || !nome_database || !tema || !flashcards || !Array.isArray(flashcards) || flashcards.length === 0) {
-        console.error("Erro: Dados incompletos ou inválidos na requisição de flashcards.", req.body);
-        return res.status(400).json({
-            error: "Dados incompletos ou inválidos: notion_token, nome_database, tema e um array 'flashcards' não vazio são obrigatórios.",
-        });
-    }
+    if (!notion_token) return res.status(400).json({ error: "Token do Notion é obrigatório." });
+    if (!tema) return res.status(400).json({ error: "Tema é obrigatório." });
 
-    // Valida se cada item no array flashcards tem 'pergunta' e 'resposta'
-    if (!flashcards.every(fc => fc && typeof fc.pergunta === 'string' && typeof fc.resposta === 'string')) {
-        return res.status(400).json({ error: "Formato inválido no array 'flashcards'. Cada item deve ter 'pergunta' e 'resposta' como strings." });
-    }
-
-    // Inicializa cliente Notion com o token do request
     const notion = new Client({ auth: notion_token });
 
-    try {
-        console.log(`Iniciando processo para criar ${flashcards.length} flashcards em DB: ${nome_database}, Tema: ${tema}`);
+    // 1. Busca/cria o tema (página principal)
+    const temaPage = await getOrCreatePage({
+      notion,
+      databaseName: nome_database,
+      pageTitle: tema,
+      tags
+    });
 
-        // 1. Encontrar/Criar Página Root e Tema (reutiliza lógica)
-        const rootPageId = await findOrCreatePage(notion, ROOT_PAGE_TITLE);
-        const themePageId = await findOrCreatePage(notion, tema, rootPageId);
+    // 2. Cria a página “Flashcards [Tema]” como subpágina do tema
+    const flashcardsPage = await getOrCreatePage({
+      notion,
+      databaseName: nome_database,
+      pageTitle: subtitulo,
+      tags,
+      parentTitle: tema,
+      asSubpage: true,
+      contentMd: "Lista de flashcards",
+      otherProps: {
+        ...(data && { Data: { date: { start: data } } }),
+        Tipo: { select: { name: "Flashcards" } },
+        ...outrasProps
+      }
+    });
 
-        // 2. Encontrar/Criar Base de Dados (reutiliza lógica, passando 'flashcards' como tipo para schema)
-        const databaseId = await findOrCreateDatabase(notion, nome_database, themePageId, "flashcards");
+    // 3. Para cada flashcard, cria uma subpágina dentro da FlashcardsPage
+    const promises = (flashcards || []).map(async (card, i) => {
+      if (!card.pergunta || !card.resposta) return null;
+      const cardTitle = card.pergunta.length > 45 ? card.pergunta.substring(0, 45) + "..." : card.pergunta;
 
-        // 3. Preparar propriedades comuns (Tags e Data)
-        const commonProperties = {};
-        const dbSchema = getDatabaseSchema("flashcards"); // Pega o schema específico
+      // Adiciona tags de flashcard, pode personalizar
+      const cardTags = [...tags, "Flashcard"];
 
-        // -- Data Comum --
-        const datePropertyName = Object.keys(dbSchema).find(key => key.toLowerCase() === 'data'); // Procura por 'Data'
-        if (datePropertyName) {
-            try {
-                commonProperties[datePropertyName] = { date: { start: data ? new Date(data).toISOString() : new Date().toISOString() } };
-            } catch (dateError) {
-                console.warn(`Data inválida fornecida ('${data}'). Usando data atual para flashcards.`);
-                commonProperties[datePropertyName] = { date: { start: new Date().toISOString() } };
-            }
+      // Corpo do flashcard em markdown
+      const cardMd = `**Pergunta:** ${card.pergunta}\n\n**Resposta:** ${card.resposta}`;
+      return getOrCreatePage({
+        notion,
+        databaseName: nome_database,
+        pageTitle: cardTitle,
+        tags: cardTags,
+        parentTitle: subtitulo,
+        asSubpage: true,
+        contentMd: cardMd,
+        otherProps: {
+          ...(data && { Data: { date: { start: data } } }),
+          Tipo: { select: { name: "Flashcard" } },
         }
+      });
+    });
 
-        // -- Tags Comuns --
-        const tagsPropertyName = Object.keys(dbSchema).find(key => key.toLowerCase() === 'tags' && dbSchema[key].multi_select);
-        let commonTagArray = [];
-        if (tagsPropertyName && tags && typeof tags === 'string') {
-            commonTagArray = tags.split(',').map(tag => ({ name: tag.trim() })).filter(tagObj => tagObj.name);
-            if (commonTagArray.length > 0) {
-                commonProperties[tagsPropertyName] = { multi_select: commonTagArray };
-            }
-        }
+    const createdCards = await Promise.all(promises);
 
-        // Identificar nomes das propriedades 'pergunta' (Title) e 'resposta' (Rich Text)
-        const perguntaPropertyName = Object.keys(dbSchema).find(key => dbSchema[key].title); // Propriedade Title
-        const respostaPropertyName = Object.keys(dbSchema).find(key => key.toLowerCase() === 'resposta' && dbSchema[key].rich_text);
-
-        if (!perguntaPropertyName || !respostaPropertyName) {
-            throw new Error("Schema da base de dados de flashcards inválido. Propriedades 'pergunta' (title) e 'resposta' (rich_text) não encontradas.");
-        }
-
-        // 4. Iterar e Criar cada Flashcard
-        const createdFlashcardsInfo = [];
-        for (const flashcard of flashcards) {
-            const flashcardProperties = { ...commonProperties }; // Copia propriedades comuns
-
-            // Adiciona pergunta (Title)
-            flashcardProperties[perguntaPropertyName] = { title: [{ text: { content: flashcard.pergunta } }] };
-
-            // Adiciona resposta (Rich Text)
-            // Usando parseRichText para permitir links simples no resposta, mas não formatação complexa
-            flashcardProperties[respostaPropertyName] = { rich_text: parseRichText(flashcard.resposta) };
-
-            try {
-                console.log(`Criando flashcard '${flashcard.pergunta}' na base de dados ID: ${databaseId}`);
-                const newFlashcardPage = await notion.pages.create({
-                    parent: { database_id: databaseId },
-                    properties: flashcardProperties,
-                    // flashcards geralmente não têm 'children' blocos, o resposta está na propriedade
-                });
-                console.log(`Flashcard criado: ID ${newFlashcardPage.id}, URL: ${newFlashcardPage.url}`);
-                createdFlashcardsInfo.push({ pergunta: flashcard.pergunta, url: newFlashcardPage.url });
-            } catch (flashcardError) {
-                console.error(`Erro ao criar flashcard '${flashcard.pergunta}':`, flashcardError.body || flashcardError.message);
-                // Decide se continua ou para em caso de erro em um flashcard
-                // Por enquanto, loga o erro e continua com os próximos
-                createdFlashcardsInfo.push({ pergunta: flashcard.pergunta, error: flashcardError.message || "Erro desconhecido" });
-            }
-        }
-
-        // 5. Retornar Resposta de Sucesso
-        res.status(201).json({
-            message: `Processamento de flashcards concluído. ${createdFlashcardsInfo.filter(info => info.url).length} criados com sucesso.`,
-            results: createdFlashcardsInfo
-        });
-
-    } catch (error) {
-        console.error("Erro durante o processamento da requisição /create-notion-flashcards:", error.body || error.message || error);
-        res.status(500).json({
-            error: "Erro interno ao processar a requisição de flashcards.",
-            details: error.message || "Detalhes indisponíveis",
-        });
-    }
+    res.json({
+      ok: true,
+      temaUrl: temaPage.url,
+      flashcardsUrl: flashcardsPage.url,
+      flashcardIds: createdCards.filter(Boolean).map(card => card.id)
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 
-// --- Iniciar Servidor --- //
+// Para rodar local
+if (require.main === module) {
+  const port = process.env.PORT || 3333;
+  app.listen(port, () => console.log(`API up at http://localhost:${port}`));
+}
 
-app.listen(PORT, () => {
-    console.log(`Serviço Notion Proxy rodando na porta ${PORT}`);
-    console.log(`Endpoints disponíveis:`);
-    console.log(`  POST /create-notion-content (para resumos/conteúdo geral)`);
-    console.log(`  POST /create-notion-flashcards (para flashcards)`);
-    console.warn("AVISO: O serviço está configurado para usar o 'notion_token' do corpo da requisição. Considere usar variáveis de ambiente por segurança.");
-});
-
+module.exports = app;
