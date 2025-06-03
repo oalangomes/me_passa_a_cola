@@ -61,11 +61,19 @@ function extractTagsSmart(blocks) {
 
 
 // Utilidade: Buscar página pelo título dentro do database
+// Corrigido para detectar dinamicamente o nome do campo do tipo "title"
 async function searchPageByTitle(notion, databaseId, title) {
+    // Busca o schema do database para descobrir o campo de título correto
+    const db = await notion.databases.retrieve({ database_id: databaseId });
+    const titlePropName = Object.entries(db.properties).find(
+        ([, val]) => val.type === "title"
+    )?.[0];
+    if (!titlePropName) return null;
+
     const response = await notion.databases.query({
         database_id: databaseId,
         filter: {
-            property: "title",
+            property: titlePropName,
             title: { equals: title }
         }
     });
@@ -149,10 +157,6 @@ function getRandomNotionColor() {
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
-
-module.exports = { getOrCreateTags };
-
-
 
 // Helper para garantir que só manda propriedades válidas
 function filterValidProperties(inputProps, dbProperties) {
@@ -585,4 +589,5 @@ if (require.main === module) {
     app.listen(port, () => console.log(`API up at http://localhost:${port}`));
 }
 
-module.exports = app;
+// Exporta o app juntamente com utilidades
+module.exports = { app, getOrCreateTags };
