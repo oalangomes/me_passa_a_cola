@@ -20,6 +20,46 @@ async function searchDatabaseByName(notion, dbName) {
     );
 }
 
+function extractTagsSmart(blocks) {
+    // Stopwords comuns (você pode expandir)
+    const stopwords = [
+        'de', 'a', 'o', 'e', 'do', 'da', 'os', 'as', 'em', 'um', 'uma', 'para', 'com', 'no', 'na', 'por', 'que', 'se', 'é', 'ao', 'dos',
+        'das', 'ou', 'pelo', 'pela', 'ser', 'ter', 'mais', 'menos', 'sobre', 'entre', 'muito', 'pouco', 'como', 'até'
+    ];
+
+    // Junta textos de headings e parágrafos
+    const allTexts = blocks
+        .filter(b => ['heading_1', 'heading_2', 'paragraph'].includes(b.type))
+        .flatMap(b => (b[b.type]?.rich_text || []))
+        .map(rt => rt.plain_text)
+        .join(' ')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // Remove acentos
+
+    // Divide em palavras e filtra stopwords, números, palavras curtas
+    const keywords = allTexts
+        .split(/\W+/)
+        .map(w => w.toLowerCase().trim())
+        .filter(w =>
+            w.length > 2 &&
+            !stopwords.includes(w) &&
+            !/^\d+$/.test(w)
+        );
+
+    // Conta frequência de cada palavra
+    const freq = {};
+    keywords.forEach(word => { freq[word] = (freq[word] || 0) + 1; });
+
+    // Seleciona as top palavras mais frequentes (você pode ajustar o limite)
+    const top = Object.entries(freq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6) // top 6 tags
+        .map(([w]) => w);
+
+    // Remove duplicadas
+    return Array.from(new Set(top));
+}
+
+
 // Utilidade: Buscar página pelo título dentro do database
 async function searchPageByTitle(notion, databaseId, title) {
     const response = await notion.databases.query({
@@ -78,7 +118,7 @@ async function getOrCreateTags(notion, databaseId, tagNames) {
                             ...options,
                             ...tagsQueFaltam.map(t => ({
                                 name: t,
-                                color: "default"
+                                color: getRandomNotionColor()
                             }))
                         ]
                     }
@@ -95,6 +135,19 @@ async function getOrCreateTags(notion, databaseId, tagNames) {
         const found = options.find(o => o.name.toLowerCase() === tagName.toLowerCase());
         return found ? { id: found.id, name: found.name } : { name: tagName };
     });
+}
+
+function getRandomNotionColor() {
+  const colors = [
+    "default", "gray", "brown", "orange",
+    "yellow", "green", "blue", "purple", "pink", "red"
+  ];
+  // Pega uma cor aleatória
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 module.exports = { getOrCreateTags };
@@ -446,7 +499,85 @@ app.get("/notion-content", async (req, res) => {
   }
 });
 
+app.post("/atualizar-titulos-e-tags", async (req, res) => {
+    try {
+        const {
+            notion_token,
+            nome_database = "Me Passa A Cola (GPT)",
+            tema
+        } = req.body;
 
+        if (!notion_token) return res.status(400).json({ error: "Token do Notion é obrigatório." });
+        if (!tema) return res.status(400).json({ error: "Tema é obrigatório." });
+
+        const notion = new Client({ auth: notion_token });
+
+        // 1. Busca o database
+        const db = await searchDatabaseByName(notion, nome_database);
+        if (!db) return res.status(404).json({ error: "Database não encontrado." });
+
+        // Props
+        const titleProp = Object.entries(db.properties).find(([, v]) => v.type === "title")[0];
+        const tagProp = Object.entries(db.properties).find(([, v]) => v.type === "multi_select")?.[0];
+
+        // 2. Busca página tema
+        const temaPage = await searchPageByTitle(notion, db.id, tema);
+        if (!temaPage) return res.status(404).json({ error: "Página do tema não encontrada." });
+
+        // 3. Pega IDs das subpáginas (via campo "Subpágina")
+        const subpaginasIds = (temaPage.properties['Subpágina']?.relation || []).map(r => r.id);
+        if (!subpaginasIds.length) return res.json({ ok: true, atualizadas: [], msg: "Nenhuma subpágina encontrada." });
+
+        const atualizadas = [];
+        for (const subId of subpaginasIds) {
+            const subpage = await notion.pages.retrieve({ page_id: subId });
+            const verifObj = subpage.properties.Verificação?.verification;
+            if (!verifObj || verifObj.state !== "unverified") continue;
+
+            // Busca primeiro H1 dos blocks
+            const blocksResp = await notion.blocks.children.list({ block_id: subId, page_size: 20 });
+            const h1block = blocksResp.results.find(b => b.type === "heading_1");
+            const novoTitulo = h1block
+                ? h1block.heading_1.rich_text.map(rt => rt.plain_text).join("").trim()
+                : subpage.properties[titleProp]?.title?.[0]?.plain_text || "";
+
+            // Tags: mantem as atuais
+            const blockRes = await notion.blocks.children.list({ block_id: subpage.id });
+            const tagsAuto = extractTagsSmart(blockRes.results);
+
+            let tags = subpage.properties[tagProp]?.multi_select?.map(t => ({ id: t.id, name: t.name })) || [];
+            const dbTagsOptions = Object.values(db.properties[tagProp].multi_select.options);
+
+            tagsAuto.forEach(t => {
+                const found = dbTagsOptions.find(opt => opt.name.toLowerCase() === t.toLowerCase());
+                if (!tags.some(tag => tag.name.toLowerCase() === t.toLowerCase())) {
+                    tags.push(found ? { id: found.id, name: found.name } : { name: t });
+                }
+
+               
+            });
+
+            await getOrCreateTags(notion, db.id, tags.map(t => t.name));
+
+            await sleep(500); // Aguardar 500ms para evitar rate limit
+
+            // Atualiza a página
+            await notion.pages.update({
+                page_id: subId,
+                properties: {
+                    [titleProp]: { title: [{ text: { content: novoTitulo } }] },
+                    ...(tagProp ? { [tagProp]: { multi_select: tags } } : {})
+                }
+            });
+            atualizadas.push({ pageId: subId, newTitle: novoTitulo });
+        }
+
+        res.json({ ok: true, total: atualizadas.length, atualizadas });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // Para rodar local
 if (require.main === module) {
