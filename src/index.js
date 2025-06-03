@@ -2,6 +2,7 @@
 const express = require('express');
 const { Client } = require('@notionhq/client');
 const { createEnhancedNotionBlocks, getEmojiForCallout } = require('./formatter');
+const natural = require('natural');
 
 const app = express();
 app.use(express.json());
@@ -20,43 +21,80 @@ async function searchDatabaseByName(notion, dbName) {
     );
 }
 
-function extractTagsSmart(blocks) {
+function extractTagsSmart(blocks, maxTags = 6) {
     // Stopwords comuns (você pode expandir)
-    const stopwords = [
-        'de', 'a', 'o', 'e', 'do', 'da', 'os', 'as', 'em', 'um', 'uma', 'para', 'com', 'no', 'na', 'por', 'que', 'se', 'é', 'ao', 'dos',
-        'das', 'ou', 'pelo', 'pela', 'ser', 'ter', 'mais', 'menos', 'sobre', 'entre', 'muito', 'pouco', 'como', 'até'
+    const STOPWORDS = [
+        // Gerais
+        "exemplo", "conclusão", "introdução", "vantagens", "desvantagens", "quando usar",
+        "referências", "objetivo", "casos", "caso", "prático", "práticos", "teórico", "leitura",
+        "resumo", "tema", "passos", "pontos", "importante", "dica", "nota", "final", "etc",
+        // Artigos, preposições, conectivos
+        "e", "de", "com", "como", "a", "o", "os", "as", "um", "uma", "para", "em", "no", "na", "nos", "nas", "dos", "das", "do", "da", "por", "pelos", "pelas", "pelo", "pela",
+        // 1ª pessoa singular
+        "eu", "meu", "minha", "meus", "minhas", "mim", "comigo",
+        // 2ª pessoa singular
+        "você", "vc", "teu", "tua", "teus", "tuas", "te", "contigo", "seu", "sua", "seus", "suas",
+        // 1ª pessoa plural
+        "nós", "nosso", "nossa", "nossos", "nossas", "conosco",
+        // 2ª pessoa plural (pouco usado, mas por garantia)
+        "vocês", "vossos", "vossas", "vosso", "vossa", "convosco",
+        // 3ª pessoa (feminino/masculino/plural)
+        "ele", "ela", "eles", "elas", "lhe", "lhes", "deles", "delas", "dele", "dela", "se", "si", "consigo",
+        // Verbos auxiliares/frequentes
+        "é", "são", "foi", "foram", "era", "eram", "ser", "está", "estão", "estava", "estavam", "estar",
+        "tem", "têm", "tenho", "temos", "tinha", "tinham", "havia", "houveram", "vai", "vão", "vamos", "ir",
+        // Genéricos
+        "que", "isso", "aquilo", "isto", "deste", "desta", "daquele", "daquela", "desse", "dessa", "nesse", "nessa", "neste", "nesta", "qual", "quais", "onde", "quando", "quem", "porquê", "porque", "por que", "cujo", "cuja", "cujos", "cujas", "seja", "sejam", "foi", "fui", "sou", "são", "tudo", "cada"
+        // Inclua mais se quiser, ou traduções para inglês!
     ];
 
-    // Junta textos de headings e parágrafos
-    const allTexts = blocks
-        .filter(b => ['heading_1', 'heading_2', 'paragraph'].includes(b.type))
-        .flatMap(b => (b[b.type]?.rich_text || []))
-        .map(rt => rt.plain_text)
-        .join(' ')
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // Remove acentos
 
-    // Divide em palavras e filtra stopwords, números, palavras curtas
-    const keywords = allTexts
-        .split(/\W+/)
-        .map(w => w.toLowerCase().trim())
-        .filter(w =>
-            w.length > 2 &&
-            !stopwords.includes(w) &&
-            !/^\d+$/.test(w)
-        );
+   // 1. Juntar todo texto (headings + paragraphs)
+  let fullText = '';
+  const headings = [];
+  blocks.forEach(b => {
+    if (b.type === 'heading_1' || b.type === 'heading_2') {
+      const texto = (b.heading_1?.rich_text || b.heading_2?.rich_text || [])
+        .map(r => r.plain_text || r.text?.content || "").join(" ");
+      headings.push(texto);
+      fullText += " " + texto;
+    }
+    if (b.type === 'paragraph') {
+      const texto = (b.paragraph?.rich_text || []).map(r => r.plain_text || r.text?.content || "").join(" ");
+      fullText += " " + texto;
+    }
+  });
 
-    // Conta frequência de cada palavra
-    const freq = {};
-    keywords.forEach(word => { freq[word] = (freq[word] || 0) + 1; });
+  // 2. NLP para extrair palavras-chave (TF-IDF)
+  const tfidf = new natural.TfIdf();
+  tfidf.addDocument(fullText);
 
-    // Seleciona as top palavras mais frequentes (você pode ajustar o limite)
-    const top = Object.entries(freq)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 6) // top 6 tags
-        .map(([w]) => w);
+  // 3. Extrai palavras mais importantes, já filtrando stopwords
+  let keywords = [];
+  tfidf.listTerms(0).forEach(item => {
+    const palavra = item.term.trim().toLowerCase();
+    if (
+      palavra.length > 2 &&
+      !STOPWORDS.includes(palavra) &&
+      !palavra.match(/^[0-9]+$/) // ignora números puros
+    ) {
+      keywords.push(palavra);
+    }
+  });
 
-    // Remove duplicadas
-    return Array.from(new Set(top));
+  // 4. Junta as dos headings
+  let headingTags = headings
+    .map(t => t.replace(/[^\wÀ-ÿ- ]/g, "").trim().toLowerCase())
+    .filter(t => t.length > 2 && !STOPWORDS.includes(t));
+  
+  // 5. Remove duplicadas e limita
+  let tags = [...new Set([...headingTags, ...keywords])];
+  tags = tags.slice(0, maxTags);
+
+  // 6. (Opcional) Capitaliza tags principais
+  tags = tags.map(t => t.charAt(0).toUpperCase() + t.slice(1));
+
+  return tags;
 }
 
 
@@ -138,16 +176,16 @@ async function getOrCreateTags(notion, databaseId, tagNames) {
 }
 
 function getRandomNotionColor() {
-  const colors = [
-    "default", "gray", "brown", "orange",
-    "yellow", "green", "blue", "purple", "pink", "red"
-  ];
-  // Pega uma cor aleatória
-  return colors[Math.floor(Math.random() * colors.length)];
+    const colors = [
+        "default", "gray", "brown", "orange",
+        "yellow", "green", "blue", "purple", "pink", "red"
+    ];
+    // Pega uma cor aleatória
+    return colors[Math.floor(Math.random() * colors.length)];
 }
 
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 module.exports = { getOrCreateTags };
@@ -400,103 +438,103 @@ app.post("/create-notion-flashcards", async (req, res) => {
 });
 
 app.get("/notion-content", async (req, res) => {
-  try {
-    const {
-      notion_token,
-      nome_database = "Me Passa A Cola (GPT)",
-      tema,
-      subtitulo,
-      tipo,       // "Resumo", "Flashcards", etc.
-      limit = 10
-    } = req.query;
+    try {
+        const {
+            notion_token,
+            nome_database = "Me Passa A Cola (GPT)",
+            tema,
+            subtitulo,
+            tipo,       // "Resumo", "Flashcards", etc.
+            limit = 10
+        } = req.query;
 
-    if (!notion_token) return res.status(400).json({ error: "Token do Notion é obrigatório." });
+        if (!notion_token) return res.status(400).json({ error: "Token do Notion é obrigatório." });
 
-    const notion = new Client({ auth: notion_token });
+        const notion = new Client({ auth: notion_token });
 
-    // Busca o banco de dados
-    const db = await searchDatabaseByName(notion, nome_database);
-    if (!db) return res.status(404).json({ error: "Database não encontrado." });
+        // Busca o banco de dados
+        const db = await searchDatabaseByName(notion, nome_database);
+        if (!db) return res.status(404).json({ error: "Database não encontrado." });
 
-    // Monta o filtro dinâmico
-    const filters = [];
-    if (tema) {
-      filters.push({
-        property: Object.entries(db.properties).find(([, v]) => v.type === "title")[0],
-        title: { equals: tema }
-      });
-    }
-    if (subtitulo) {
-      filters.push({
-        property: Object.entries(db.properties).find(([, v]) => v.type === "title")[0],
-        title: { equals: subtitulo }
-      });
-    }
-    if (tipo) {
-      filters.push({
-        property: "Tipo",
-        select: { equals: tipo }
-      });
-    }
+        // Monta o filtro dinâmico
+        const filters = [];
+        if (tema) {
+            filters.push({
+                property: Object.entries(db.properties).find(([, v]) => v.type === "title")[0],
+                title: { equals: tema }
+            });
+        }
+        if (subtitulo) {
+            filters.push({
+                property: Object.entries(db.properties).find(([, v]) => v.type === "title")[0],
+                title: { equals: subtitulo }
+            });
+        }
+        if (tipo) {
+            filters.push({
+                property: "Tipo",
+                select: { equals: tipo }
+            });
+        }
 
-    // Consulta as páginas
-    const response = await notion.databases.query({
-      database_id: db.id,
-      filter: filters.length === 1 ? filters[0] : (filters.length > 1 ? { and: filters } : undefined),
-      page_size: Number(limit) || 10,
-    });
-
-    // Monta o array de resultados
-    const results = await Promise.all(response.results.map(async page => {
-      const titleProp = Object.entries(page.properties).find(([, v]) => v.type === "title")[0];
-      const tagsProp = Object.entries(page.properties).find(([, v]) => v.type === "multi_select")?.[0];
-      const tipoProp = page.properties.Tipo?.select?.name || null;
-      const dataProp = page.properties.Data?.date?.start || null;
-
-      // Busca blocos do conteúdo
-      let blocks = [];
-      try {
-        const blockRes = await notion.blocks.children.list({ block_id: page.id });
-        blocks = blockRes.results.map(block => {
-          if (block.type === "paragraph" || block.type === "bulleted_list_item" || block.type === "numbered_list_item") {
-            return block[block.type].rich_text.map(r => r.plain_text).join("");
-          }
-          if (block.type === "table") {
-            // (Opcional: tratar tabelas com mais detalhes)
-            return "[tabela]";
-          }
-          if (block.type === "heading_1" || block.type === "heading_2" || block.type === "heading_3") {
-            return "#".repeat(Number(block.type.replace("heading_", ""))) + " " +
-              block[block.type].rich_text.map(r => r.plain_text).join("");
-          }
-          if (block.type === "quote") {
-            return "> " + block[block.type].rich_text.map(r => r.plain_text).join("");
-          }
-          if (block.type === "code") {
-            return "```" + (block[block.type].language || "") + "\n" +
-              block[block.type].rich_text.map(r => r.plain_text).join("") + "\n```";
-          }
-          // Outros tipos...
-          return "[bloco não tratado]";
+        // Consulta as páginas
+        const response = await notion.databases.query({
+            database_id: db.id,
+            filter: filters.length === 1 ? filters[0] : (filters.length > 1 ? { and: filters } : undefined),
+            page_size: Number(limit) || 10,
         });
-      } catch { /* ignora erro */ }
 
-      return {
-        id: page.id,
-        title: page.properties[titleProp]?.title?.[0]?.plain_text || "",
-        tags: tagsProp ? page.properties[tagsProp]?.multi_select?.map(t => t.name) : [],
-        tipo: tipoProp,
-        data: dataProp,
-        url: page.url,
-        blocks
-      };
-    }));
+        // Monta o array de resultados
+        const results = await Promise.all(response.results.map(async page => {
+            const titleProp = Object.entries(page.properties).find(([, v]) => v.type === "title")[0];
+            const tagsProp = Object.entries(page.properties).find(([, v]) => v.type === "multi_select")?.[0];
+            const tipoProp = page.properties.Tipo?.select?.name || null;
+            const dataProp = page.properties.Data?.date?.start || null;
 
-    res.json({ ok: true, results });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
+            // Busca blocos do conteúdo
+            let blocks = [];
+            try {
+                const blockRes = await notion.blocks.children.list({ block_id: page.id });
+                blocks = blockRes.results.map(block => {
+                    if (block.type === "paragraph" || block.type === "bulleted_list_item" || block.type === "numbered_list_item") {
+                        return block[block.type].rich_text.map(r => r.plain_text).join("");
+                    }
+                    if (block.type === "table") {
+                        // (Opcional: tratar tabelas com mais detalhes)
+                        return "[tabela]";
+                    }
+                    if (block.type === "heading_1" || block.type === "heading_2" || block.type === "heading_3") {
+                        return "#".repeat(Number(block.type.replace("heading_", ""))) + " " +
+                            block[block.type].rich_text.map(r => r.plain_text).join("");
+                    }
+                    if (block.type === "quote") {
+                        return "> " + block[block.type].rich_text.map(r => r.plain_text).join("");
+                    }
+                    if (block.type === "code") {
+                        return "```" + (block[block.type].language || "") + "\n" +
+                            block[block.type].rich_text.map(r => r.plain_text).join("") + "\n```";
+                    }
+                    // Outros tipos...
+                    return "[bloco não tratado]";
+                });
+            } catch { /* ignora erro */ }
+
+            return {
+                id: page.id,
+                title: page.properties[titleProp]?.title?.[0]?.plain_text || "",
+                tags: tagsProp ? page.properties[tagsProp]?.multi_select?.map(t => t.name) : [],
+                tipo: tipoProp,
+                data: dataProp,
+                url: page.url,
+                blocks
+            };
+        }));
+
+        res.json({ ok: true, results });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.post("/atualizar-titulos-e-tags", async (req, res) => {
@@ -543,7 +581,7 @@ app.post("/atualizar-titulos-e-tags", async (req, res) => {
 
             // Tags: mantem as atuais
             const blockRes = await notion.blocks.children.list({ block_id: subpage.id });
-            const tagsAuto = extractTagsSmart(blockRes.results);
+            const tagsAuto = extractTagsSmart(blockRes.results, 6);
 
             let tags = subpage.properties[tagProp]?.multi_select?.map(t => ({ id: t.id, name: t.name })) || [];
             const dbTagsOptions = Object.values(db.properties[tagProp].multi_select.options);
@@ -554,7 +592,7 @@ app.post("/atualizar-titulos-e-tags", async (req, res) => {
                     tags.push(found ? { id: found.id, name: found.name } : { name: t });
                 }
 
-               
+
             });
 
             await getOrCreateTags(notion, db.id, tags.map(t => t.name));
