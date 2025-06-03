@@ -231,7 +231,8 @@ function parseRichText(text) {
     let lastIndex = 0;
     let match;
 
-    text = text.replace(/\**/g, "");
+    // Remove asteriscos simples utilizados para marcação (*, **)
+    text = text.replace(/\*/g, "");
     // Itera sobre as URLs encontradas
     while ((match = urlRegex.exec(text)) !== null) {
         // Adiciona o texto antes da URL, se houver
