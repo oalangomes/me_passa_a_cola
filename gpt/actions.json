@@ -46,6 +46,23 @@
           "200": { "description": "Sucesso" }
         }
       }
+    },
+    "/notion-content": {
+      "get": {
+        "operationId": "buscarConteudoNotion",
+        "description": "Busca conteúdos já registrados no Notion usando filtros de tema, subtítulo ou tipo.",
+        "parameters": [
+          { "name": "notion_token", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "nome_database", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "tema", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "subtitulo", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "tipo", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": { "description": "Sucesso" }
+        }
+      }
     }
   },
   "components": {
