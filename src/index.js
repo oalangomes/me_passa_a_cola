@@ -644,18 +644,34 @@ app.get("/notion-content", async (req, res) => {
 
         // Monta o filtro dinâmico
         const filters = [];
-        if (tema) {
-            filters.push({
-                property: Object.entries(db.properties).find(([, v]) => v.type === "title")[0],
-                title: { equals: tema }
-            });
-        }
+
+        const titlePropName = Object.entries(db.properties).find(([, v]) => v.type === "title")[0];
+        const relationPropName = Object.entries(db.properties).find(
+            ([key, val]) => val.type === "relation" && key === "página principal"
+        )?.[0];
+
         if (subtitulo) {
             filters.push({
-                property: Object.entries(db.properties).find(([, v]) => v.type === "title")[0],
+                property: titlePropName,
                 title: { equals: subtitulo }
             });
         }
+
+        if (tema && relationPropName) {
+            const temaPage = await searchPageByTitle(notion, db.id, tema);
+            if (temaPage) {
+                filters.push({
+                    property: relationPropName,
+                    relation: { contains: temaPage.id }
+                });
+            }
+        } else if (tema) {
+            filters.push({
+                property: titlePropName,
+                title: { equals: tema }
+            });
+        }
+
         if (tipo) {
             filters.push({
                 property: "Tipo",
