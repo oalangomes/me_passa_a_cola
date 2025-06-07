@@ -47,6 +47,21 @@
         }
       }
     },
+    "/create-notion-cronograma": {
+      "post": {
+        "operationId": "enviarCronograma",
+        "description": "Envia itens de cronograma para o Notion.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/NotionCronograma" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
     "/notion-content": {
       "get": {
         "operationId": "buscarConteudoNotion",
@@ -128,6 +143,34 @@
           }
         },
         "required": ["destino", "tema", "flashcards"]
+      },
+      "NotionCronograma": {
+        "type": "object",
+        "properties": {
+          "notion_token": {
+            "type": "string",
+            "description": "Token da integração do Notion (ntn_...)"
+          },
+          "nome_database": {
+            "type": "string",
+            "description": "Nome Da Base"
+          },
+          "tema": { "type": "string" },
+          "cronograma": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "atividade": { "type": "string" },
+                "descricao": { "type": "string" },
+                "data": { "type": "string", "format": "date-time" }
+              },
+              "required": ["atividade"]
+            }
+          },
+          "tags": { "type": "string" }
+        },
+        "required": ["tema", "cronograma", "notion_token"]
       }
     }
   }
