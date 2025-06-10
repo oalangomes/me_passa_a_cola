@@ -16,7 +16,8 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "natural": "^8.1.0",
-    "swagger-ui-express": "^4.7.0"
+    "swagger-ui-express": "^4.7.0",
+    "simple-git": "^3.19.1"
   },
   "engines": {
     "node": "18.x"

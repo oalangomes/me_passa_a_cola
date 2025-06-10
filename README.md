@@ -114,6 +114,32 @@ Crie um banco com os seguintes campos (com esses nomes e tipos):
 - Tags (Multi-seleção)
 - Data (Data)
 
+
+## 🚀 Endpoint de Commit no Git
+
+A API disponibiliza a rota `POST /git-commit` para realizar commits em repositórios privados utilizando um token de acesso.
+
+### Requisição
+
+```http
+POST /git-commit
+Headers:
+  x-api-token: <seu_token>
+
+{
+  "repoUrl": "https://github.com/usuario/repositorio.git",
+  "credentials": "ghp_xxx",
+  "message": "feat: meu commit",
+  "files": ["arquivo.txt"],
+  "branch": "main",
+  "content": {
+    "novo.txt": "conteudo gerado"
+  }
+}
+```
+
+Os caminhos listados em `files` são relativos ao repositório. O objeto `content` permite criar arquivos fornecendo pares caminho/conteúdo. O acesso é protegido pelo cabeçalho `x-api-token`.
+
 ---
 
 ## ⚖️ Política de uso e privacidade
