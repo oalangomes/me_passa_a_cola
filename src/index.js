@@ -12,10 +12,14 @@ const {
     getOrCreatePage,
     sleep
 } = require('./utils/notion');
+const { cloneRepo, commitAndPush } = require('./utils/git');
+const fs = require('fs');
+const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('../gpt/actions.json');
 
 const app = express();
+const API_TOKEN = process.env.API_TOKEN || '';
 app.use(express.json());
 // Expose Swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -431,6 +435,43 @@ app.post("/atualizar-titulos-e-tags", async (req, res) => {
         }
 
         res.json({ ok: true, total: atualizadas.length, atualizadas });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/git-commit', async (req, res) => {
+    if (req.header('x-api-token') !== API_TOKEN) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const {
+        repoUrl,
+        credentials,
+        message,
+        files = [],
+        branch = 'main',
+        content = {}
+    } = req.body;
+
+    if (!repoUrl || !credentials || !message) {
+        return res.status(400).json({ error: 'repoUrl, credentials and message are required' });
+    }
+
+    try {
+        const repoPath = await cloneRepo(repoUrl, credentials);
+
+        for (const [filePath, fileContent] of Object.entries(content)) {
+            const fullPath = path.join(repoPath, filePath);
+            fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+            fs.writeFileSync(fullPath, fileContent);
+        }
+
+        const pathsToAdd = files.map(f => path.join(repoPath, f));
+        await commitAndPush(repoPath, message, pathsToAdd, branch);
+
+        res.json({ ok: true });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });

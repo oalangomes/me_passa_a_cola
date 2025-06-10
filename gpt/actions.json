@@ -91,6 +91,21 @@
         },
         "responses": { "200": { "description": "Sucesso" } }
       }
+    },
+    "/git-commit": {
+      "post": {
+        "operationId": "gitCommit",
+        "description": "Realiza commit em repositório privado usando token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/GitCommit" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
     }
   },
   "components": {
@@ -185,6 +200,25 @@
         },
         "required": ["tema", "cronograma", "notion_token"]
       },
+      "GitCommit": {
+        "type": "object",
+        "properties": {
+          "repoUrl": { "type": "string" },
+          "credentials": { "type": "string" },
+          "message": { "type": "string" },
+          "files": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "branch": { "type": "string" },
+          "content": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        },
+        "required": ["repoUrl", "credentials", "message"]
+  },
+
       "AtualizarTitulosETags": {
         "type": "object",
         "properties": {
