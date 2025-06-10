@@ -74,9 +74,22 @@
           { "name": "tipo", "in": "query", "required": false, "schema": { "type": "string" } },
           { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "default": 10 } }
         ],
-        "responses": {
-          "200": { "description": "Sucesso" }
-        }
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
+    "/atualizar-titulos-e-tags": {
+      "post": {
+        "operationId": "atualizarTitulosETags",
+        "description": "Atualiza títulos e tags das subpáginas de um tema no Notion.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AtualizarTitulosETags" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
       }
     },
     "/git-commit": {
@@ -204,6 +217,25 @@
           }
         },
         "required": ["repoUrl", "credentials", "message"]
+  },
+
+      "AtualizarTitulosETags": {
+        "type": "object",
+        "properties": {
+          "notion_token": {
+            "type": "string",
+            "description": "Token da integração do Notion (ntn_...)"
+          },
+          "nome_database": {
+            "type": "string",
+            "description": "Nome Da Base"
+          },
+          "tema": {
+            "type": "string",
+            "description": "Tema cujas subpáginas devem ser atualizadas"
+          }
+        },
+        "required": ["notion_token", "tema"]
       }
     }
   }
