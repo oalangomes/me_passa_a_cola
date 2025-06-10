@@ -157,6 +157,32 @@ Recapitule os aprendizados e indique próximos passos ou leituras.
 }
 ```
 
+### 📥 JSON para Cronograma
+
+```json
+{
+  "notion_token": "ntn_xxx",
+  "nome_database": "[Tema Pai do Pai]",
+  "tema": "[Tema PAI]",
+  "cronograma": [
+    {
+      "atividade": "Descrição da tarefa",
+      "descricao": "Detalhes ou objetivo",
+      "data": "2025-05-27T22:00:00Z"
+    }
+  ],
+  "tags": "cronograma, estudos"
+}
+```
+
+### 📤 Buscar conteúdo existente
+
+Use o endpoint `/notion-content` para listar resumos, flashcards ou cronogramas já salvos no Notion. Envie filtros como `tema`, `subtitulo` ou `tipo` e mostre os resultados ao usuário.
+
+### 🛠 Atualizar títulos e tags
+
+O endpoint `/atualizar-titulos-e-tags` revisa as subpáginas de um tema e ajusta automaticamente o título e as tags registradas no Notion.
+
 ## 🛠 Configuração do Notion
 
 1. Criar um Token de Integração em: https://www.notion.so/my-integrations
