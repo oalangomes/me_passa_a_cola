@@ -96,6 +96,14 @@
       "post": {
         "operationId": "gitCommit",
         "description": "Realiza commit em repositório privado usando token",
+        "parameters": [
+          {
+            "name": "x-api-token",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -210,7 +218,10 @@
             "type": "array",
             "items": { "type": "string" }
           },
-          "branch": { "type": "string" },
+          "branch": {
+            "type": "string",
+            "description": "Nome do branch (padr\u00e3o 'main')"
+          },
           "content": {
             "type": "object",
             "additionalProperties": { "type": "string" }
