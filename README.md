@@ -131,14 +131,14 @@ Headers:
   "credentials": "ghp_xxx",
   "message": "feat: meu commit",
   "files": ["arquivo.txt"],
-  "branch": "main",
+  "branch": "main",  # opcional
   "content": {
-    "novo.txt": "conteudo gerado"
+  "novo.txt": "conteudo gerado"
   }
 }
 ```
 
-Os caminhos listados em `files` são relativos ao repositório. O objeto `content` permite criar arquivos fornecendo pares caminho/conteúdo. O acesso é protegido pelo cabeçalho `x-api-token`.
+O campo `branch` é opcional e assume `main` como padrão. Os caminhos listados em `files` são relativos ao repositório. O objeto `content` permite criar arquivos fornecendo pares caminho/conteúdo. O acesso é protegido pelo cabeçalho `x-api-token`.
 
 ---
 
