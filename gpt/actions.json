@@ -92,6 +92,21 @@
         "responses": { "200": { "description": "Sucesso" } }
       }
     },
+    "/limpar-tags-orfas": {
+      "post": {
+        "operationId": "limparTagsOrfas",
+        "description": "Remove tags não utilizadas do banco de dados.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LimparTagsOrfas" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
     "/git-commit": {
       "post": {
         "operationId": "gitCommit",
@@ -247,6 +262,20 @@
           }
         },
         "required": ["notion_token", "tema"]
+      },
+      "LimparTagsOrfas": {
+        "type": "object",
+        "properties": {
+          "notion_token": {
+            "type": "string",
+            "description": "Token da integração do Notion (ntn_...)"
+          },
+          "nome_database": {
+            "type": "string",
+            "description": "Nome Da Base"
+          }
+        },
+        "required": ["notion_token"]
       }
     }
   }

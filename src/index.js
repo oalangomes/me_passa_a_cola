@@ -7,6 +7,7 @@ const {
     searchDatabaseByName,
     searchPageByTitle,
     limparTagsRuins,
+    removerTagsOrfas,
     getOrCreateTags,
     filterValidProperties,
     getOrCreatePage,
@@ -435,6 +436,27 @@ app.post("/atualizar-titulos-e-tags", async (req, res) => {
         }
 
         res.json({ ok: true, total: atualizadas.length, atualizadas });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/limpar-tags-orfas', async (req, res) => {
+    try {
+        const {
+            notion_token,
+            nome_database = 'Me Passa A Cola (GPT)'
+        } = req.body;
+
+        if (!notion_token) return res.status(400).json({ error: 'Token do Notion é obrigatório.' });
+
+        const notion = new Client({ auth: notion_token });
+        const db = await searchDatabaseByName(notion, nome_database);
+        if (!db) return res.status(404).json({ error: 'Database não encontrado.' });
+
+        const resultado = await removerTagsOrfas(notion, db.id);
+        res.json({ ok: true, ...resultado });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
