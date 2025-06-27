@@ -95,6 +95,45 @@ async function limparTagsRuins(notion, databaseId, stopwords, contextoObrigatori
     };
 }
 
+// Remove opções de tags que não são usadas em nenhuma página
+async function removerTagsOrfas(notion, databaseId) {
+    const db = await notion.databases.retrieve({ database_id: databaseId });
+    const tagPropEntry = Object.entries(db.properties).find(
+        ([key, val]) => val.type === 'multi_select' && key.toLowerCase().includes('tag')
+    );
+    if (!tagPropEntry) throw new Error('Campo de tags não encontrado.');
+
+    const tagPropName = tagPropEntry[0];
+    const options = tagPropEntry[1].multi_select.options || [];
+
+    const usados = new Set();
+    let cursor = undefined;
+    do {
+        const resp = await notion.databases.query({ database_id: databaseId, start_cursor: cursor });
+        resp.results.forEach(page => {
+            const tags = page.properties[tagPropName]?.multi_select || [];
+            tags.forEach(t => usados.add(t.id));
+        });
+        cursor = resp.has_more ? resp.next_cursor : undefined;
+    } while (cursor);
+
+    const restantes = options.filter(opt => usados.has(opt.id));
+
+    await notion.databases.update({
+        database_id: databaseId,
+        properties: {
+            [tagPropName]: { multi_select: { options: restantes } }
+        }
+    });
+
+    return {
+        totalAntes: options.length,
+        totalDepois: restantes.length,
+        removidas: options.length - restantes.length,
+        tagsRemovidas: options.filter(o => !usados.has(o.id)).map(o => o.name)
+    };
+}
+
 // Cria ou retorna tags existentes
 async function getOrCreateTags(notion, databaseId, tagNames) {
     if (!Array.isArray(tagNames)) {
@@ -213,6 +252,7 @@ module.exports = {
     searchDatabaseByName,
     searchPageByTitle,
     limparTagsRuins,
+    removerTagsOrfas,
     getOrCreateTags,
     filterValidProperties,
     getOrCreatePage,
