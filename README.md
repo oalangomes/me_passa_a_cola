@@ -115,6 +115,162 @@ Crie um banco com os seguintes campos (com esses nomes e tipos):
 - Data (Data)
 
 
+## 📬 Endpoints principais do Notion
+
+A documentação completa pode ser consultada em [`/api-docs`](https://me-passa-a-cola.onrender.com/api-docs).
+
+### POST /create-notion-content
+
+Envia um resumo ou texto para uma página do banco.
+
+**Parâmetros**
+
+- `notion_token` (obrigatório)
+- `nome_database` (opcional)
+- `tema` (opcional)
+- `subtitulo` (opcional)
+- `tipo` (opcional)
+- `resumo`
+- `tags` (opcional)
+- `data` (opcional)
+
+**Exemplo**
+
+```http
+POST /create-notion-content
+{
+  "notion_token": "secret_xxx",
+  "nome_database": "Me Passa A Cola (GPT)",
+  "tema": "Matéria X",
+  "subtitulo": "Aula 1",
+  "resumo": "Conteúdo em Markdown",
+  "tags": ["exemplo"],
+  "data": "2024-04-01"
+}
+```
+
+**Resposta**
+
+```json
+{ "ok": true, "pageUrl": "https://..." }
+```
+
+### POST /create-notion-flashcards
+
+Gera uma página de flashcards para um tema.
+
+**Parâmetros**
+
+- `notion_token` (obrigatório)
+- `nome_database` (opcional)
+- `tema` (obrigatório)
+- `subtitulo` (opcional)
+- `flashcards` (lista de `{ pergunta, resposta }`)
+- `tags` (opcional)
+- `data` (opcional)
+
+**Exemplo**
+
+```http
+POST /create-notion-flashcards
+{
+  "notion_token": "secret_xxx",
+  "tema": "Matéria X",
+  "flashcards": [
+    { "pergunta": "O que é IA?", "resposta": "Área que estuda..." }
+  ]
+}
+```
+
+**Resposta**
+
+```json
+{ "ok": true, "flashcardsUrl": "https://..." }
+```
+
+### POST /create-notion-cronograma
+
+Cria atividades de cronograma dentro de um tema.
+
+**Parâmetros**
+
+- `notion_token` (obrigatório)
+- `nome_database` (opcional)
+- `tema` (obrigatório)
+- `cronograma` (lista de `{ atividade, descricao?, data? }`)
+- `tags` (opcional)
+
+**Exemplo**
+
+```http
+POST /create-notion-cronograma
+{
+  "notion_token": "secret_xxx",
+  "tema": "Matéria X",
+  "cronograma": [
+    { "atividade": "Ler capítulo 1", "data": "2024-04-02" }
+  ]
+}
+```
+
+**Resposta**
+
+```json
+{ "ok": true, "atividades": ["..."] }
+```
+
+### GET /notion-content
+
+Consulta conteúdos registrados no Notion.
+
+**Parâmetros (query)**
+
+- `notion_token` (obrigatório)
+- `nome_database` (opcional)
+- `tema` (opcional)
+- `subtitulo` (opcional)
+- `tipo` (opcional)
+- `limit` (opcional)
+
+**Exemplo**
+
+```
+GET /notion-content?notion_token=secret_xxx&tema=Matéria%20X&limit=5
+```
+
+**Resposta**
+
+```json
+{ "ok": true, "results": [] }
+```
+
+### POST /atualizar-titulos-e-tags
+
+Atualiza os títulos e tags das subpáginas de um tema.
+
+**Parâmetros**
+
+- `notion_token` (obrigatório)
+- `nome_database` (opcional)
+- `tema` (obrigatório)
+
+**Exemplo**
+
+```http
+POST /atualizar-titulos-e-tags
+{
+  "notion_token": "secret_xxx",
+  "tema": "Matéria X"
+}
+```
+
+**Resposta**
+
+```json
+{ "ok": true, "total": 0 }
+```
+
+
 ## 🚀 Endpoint de Commit no Git
 
 A API disponibiliza a rota `POST /git-commit` para realizar commits em repositórios privados utilizando um token de acesso.
