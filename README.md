@@ -130,6 +130,9 @@ Para executar o projeto em sua máquina, siga os passos abaixo:
    API_TOKEN=<seu_token> npm start
    ```
 
+   Caso prefira, crie um arquivo `.env` com suas variáveis (`API_TOKEN`, `PORT`, etc.).
+   Ao executar `npm start`, esse arquivo será carregado automaticamente.
+
 4. Para executar os testes automatizados, utilize:
 
    ```bash
@@ -325,7 +328,8 @@ Antes de iniciar a API é preciso definir algumas variáveis no ambiente:
 - `API_TOKEN`: usada para autenticação em `/git-commit`.
 - `PORT` (opcional, padrão `3333`).
 
-Você pode exportá-las no terminal ou criar um arquivo `.env` na raiz do projeto, depois executar `npm start`:
+Você pode exportá-las no terminal ou criar um arquivo `.env` na raiz do projeto.
+Ao executar `npm start`, esse arquivo será lido automaticamente:
 
 ```bash
 API_TOKEN=seu_token PORT=3333 npm start
