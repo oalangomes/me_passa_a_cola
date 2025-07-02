@@ -175,6 +175,15 @@ POST /limpar-tags-orfas
 
 Retorna um resumo com a quantidade de tags removidas.
 
+## 🔍 Validação automática do deploy
+
+O repositório conta com um workflow do **GitHub Actions** que monitora se o
+deploy no Render está ativo. O arquivo
+`.github/workflows/render-deploy-check.yml` espera 45&nbsp;segundos antes de
+fazer uma requisição para `https://me-passa-a-cola.onrender.com/api-docs`. Se a
+resposta não for `200`, o workflow falha e sinaliza um problema no ambiente de
+produção.
+
 ---
 
 ## ⚖️ Política de uso e privacidade
