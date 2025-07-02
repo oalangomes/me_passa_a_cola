@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node tests/run.js"
   },
   "keywords": [],
   "author": "",
@@ -17,7 +17,8 @@
     "express": "^5.1.0",
     "natural": "^8.1.0",
     "swagger-ui-express": "^4.6.3",
-    "simple-git": "^3.28.0"
+    "simple-git": "^3.28.0",
+    "pdf-parse": "^1.1.1"
   },
   "engines": {
     "node": "18.x"

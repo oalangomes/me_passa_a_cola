@@ -129,6 +129,21 @@
         },
         "responses": { "200": { "description": "Sucesso" } }
       }
+    },
+    "/pdf-to-notion": {
+      "post": {
+        "operationId": "enviarPDF",
+        "description": "Envia um PDF em base64 para conversão em Markdown e registro no Notion.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/NotionPdf" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
     }
   },
   "components": {
@@ -245,6 +260,30 @@
         "required": ["repoUrl", "credentials", "message"]
   },
 
+      "NotionPdf": {
+        "type": "object",
+        "properties": {
+          "notion_token": {
+            "type": "string",
+            "description": "Token da integração do Notion (ntn_...)"
+          },
+          "nome_database": {
+            "type": "string",
+            "description": "Nome Da Base"
+          },
+          "tema": { "type": "string" },
+          "subtitulo": { "type": "string" },
+          "pdf_base64": { "type": "string" },
+          "tags": { "type": "string" },
+          "data": { "type": "string", "format": "date-time" },
+          "destino": {
+            "type": "string",
+            "description": "Destino do envio: 'notion'",
+            "enum": ["notion"]
+          }
+        },
+        "required": ["destino", "pdf_base64"]
+      },
       "AtualizarTitulosETags": {
         "type": "object",
         "properties": {
