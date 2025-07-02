@@ -113,6 +113,28 @@ Crie um banco com os seguintes campos (com esses nomes e tipos):
 - Observacoes (Texto)
 - Tags (Multi-seleção)
 - Data (Data)
+## 🚀 Como rodar localmente
+
+Para executar o projeto em sua máquina, siga os passos abaixo:
+
+1. Certifique-se de ter o **Node.js 18** instalado (conforme especificado no `package.json`).
+2. No diretório do projeto, instale as dependências executando:
+
+   ```bash
+   npm install
+   ```
+
+3. Inicie a API definindo seu token e rodando o comando:
+
+   ```bash
+   API_TOKEN=<seu_token> npm start
+   ```
+
+4. Para executar os testes automatizados, utilize:
+
+   ```bash
+   npm test
+   ```
 
 
 ## 📬 Endpoints principais do Notion
