@@ -318,6 +318,19 @@ Headers:
 
 O campo `branch` é opcional e assume `main` como padrão. Os caminhos listados em `files` são relativos ao repositório. O objeto `content` permite criar arquivos fornecendo pares caminho/conteúdo. O acesso é protegido pelo cabeçalho `x-api-token`.
 
+### 🔧 Variáveis de ambiente
+
+Antes de iniciar a API é preciso definir algumas variáveis no ambiente:
+
+- `API_TOKEN`: usada para autenticação em `/git-commit`.
+- `PORT` (opcional, padrão `3333`).
+
+Você pode exportá-las no terminal ou criar um arquivo `.env` na raiz do projeto, depois executar `npm start`:
+
+```bash
+API_TOKEN=seu_token PORT=3333 npm start
+```
+
 ## 📄 Endpoint para PDF
 
 Envia um arquivo PDF em base64 e registra o texto no Notion.
