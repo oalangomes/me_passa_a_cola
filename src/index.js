@@ -1,3 +1,4 @@
+require('dotenv').config();
 // index.js
 const express = require('express');
 const { Client } = require('@notionhq/client');
