@@ -14,6 +14,7 @@ const {
     sleep
 } = require('./utils/notion');
 const { cloneRepo, commitAndPush } = require('./utils/git');
+const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
@@ -230,6 +231,66 @@ app.post('/create-notion-cronograma', async (req, res) => {
         }
 
         res.json({ ok: true, temaUrl: temaPage.url, atividades: created });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/pdf-to-notion', async (req, res) => {
+    try {
+        const {
+            notion_token,
+            nome_database = 'Me Passa A Cola (GPT)',
+            tema,
+            subtitulo,
+            pdf_base64,
+            tags = [],
+            data,
+            ...outrasProps
+        } = req.body;
+
+        if (!notion_token) return res.status(400).json({ error: 'Token do Notion é obrigatório.' });
+        if (!pdf_base64) return res.status(400).json({ error: 'PDF é obrigatório.' });
+        if (!tema && !subtitulo) return res.status(400).json({ error: 'Tema ou subtítulo são obrigatórios.' });
+
+        const notion = new Client({ auth: notion_token });
+
+        const pdfBuffer = Buffer.from(pdf_base64, 'base64');
+        const parsed = await pdfParse(pdfBuffer);
+        const md = (parsed.text || '').trim();
+
+        let temaPage = null;
+        if (tema) {
+            temaPage = await getOrCreatePage({
+                notion,
+                databaseName: nome_database,
+                pageTitle: tema,
+                tags
+            });
+        }
+
+        const page = await getOrCreatePage({
+            notion,
+            databaseName: nome_database,
+            pageTitle: subtitulo || 'Arquivo PDF',
+            tags,
+            parentTitle: temaPage ? tema : null,
+            asSubpage: !!temaPage,
+            contentMd: md,
+            otherProps: {
+                ...(data && { Data: { date: { start: data } } }),
+                Tipo: { select: { name: 'PDF' } },
+                ...outrasProps
+            }
+        });
+
+        res.json({
+            ok: true,
+            temaUrl: temaPage ? temaPage.url : undefined,
+            pageUrl: page.url,
+            id: page.id
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });

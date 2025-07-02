@@ -140,6 +140,26 @@ Headers:
 
 O campo `branch` é opcional e assume `main` como padrão. Os caminhos listados em `files` são relativos ao repositório. O objeto `content` permite criar arquivos fornecendo pares caminho/conteúdo. O acesso é protegido pelo cabeçalho `x-api-token`.
 
+## 📄 Endpoint para PDF
+
+Envia um arquivo PDF em base64 e registra o texto no Notion.
+
+```http
+POST /pdf-to-notion
+
+{
+  "notion_token": "secret_xxx",
+  "nome_database": "Me Passa A Cola (GPT)",
+  "tema": "Matéria X",
+  "subtitulo": "Aula 1",
+  "pdf_base64": "<arquivo em base64>",
+  "tags": ["exemplo"],
+  "data": "2024-04-01"
+}
+```
+
+O PDF é convertido em Markdown antes de ser enviado ao Notion.
+
 ## 🧹 Endpoint para limpar tags órfãs
 
 Remove opções de tags não utilizadas em nenhuma página do banco.
