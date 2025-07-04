@@ -130,6 +130,29 @@
         "responses": { "200": { "description": "Sucesso" } }
       }
     },
+    "/create-notion-content-git": {
+      "post": {
+        "operationId": "criarNotionGit",
+        "description": "Cria p\u00e1gina no Notion e salva em reposit\u00f3rio Git.",
+        "parameters": [
+          {
+            "name": "x-api-token",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/NotionContentGit" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
     "/pdf-to-notion": {
       "post": {
         "operationId": "enviarPDF",
@@ -260,6 +283,29 @@
         "required": ["repoUrl", "credentials", "message"]
   },
 
+      "NotionContentGit": {
+        "type": "object",
+        "properties": {
+          "repoUrl": { "type": "string" },
+          "credentials": { "type": "string" },
+          "commitMessage": { "type": "string" },
+          "filePath": { "type": "string" },
+          "branch": { "type": "string" },
+          "notion_token": {
+            "type": "string",
+            "description": "Token da integra\u00e7\u00e3o do Notion (ntn_...)"
+          },
+          "nome_database": { "type": "string" },
+          "tema": { "type": "string" },
+          "subtitulo": { "type": "string" },
+          "tipo": { "type": "string" },
+          "resumo": { "type": "string" },
+          "observacoes": { "type": "string" },
+          "tags": { "type": "string" },
+          "data": { "type": "string", "format": "date-time" }
+        },
+        "required": ["repoUrl", "credentials", "commitMessage", "filePath", "notion_token", "resumo"]
+      },
       "NotionPdf": {
         "type": "object",
         "properties": {

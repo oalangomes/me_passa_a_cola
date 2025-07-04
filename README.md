@@ -321,6 +321,32 @@ Headers:
 
 O campo `branch` é opcional e assume `main` como padrão. Os caminhos listados em `files` são relativos ao repositório. O objeto `content` permite criar arquivos fornecendo pares caminho/conteúdo. O acesso é protegido pelo cabeçalho `x-api-token`.
 
+## 🚀 Endpoint para Notion + Git
+
+Cria o conteúdo no Notion e salva o mesmo texto em um repositório Git.
+
+### Requisição
+
+```http
+POST /create-notion-content-git
+Headers:
+  x-api-token: <seu_token>
+
+{
+  "repoUrl": "https://github.com/usuario/repositorio.git",
+  "credentials": "ghp_xxx",
+  "commitMessage": "feat: novo conteúdo",
+  "filePath": "docs/novo.md",
+  "branch": "main",  # opcional
+  "notion_token": "secret_xxx",
+  "tema": "Matéria X",
+  "subtitulo": "Aula 1",
+  "resumo": "Conteúdo em Markdown"
+}
+```
+
+As tags informadas são combinadas com tags geradas automaticamente a partir do texto antes de criar a página e salvar o arquivo.
+
 ### 🔧 Variáveis de ambiente
 
 Antes de iniciar a API é preciso definir algumas variáveis no ambiente:
