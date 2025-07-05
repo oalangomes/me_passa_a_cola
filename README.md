@@ -223,7 +223,7 @@ Cria atividades de cronograma dentro de um tema.
 - `nome_database` (opcional)
 - `tema` (obrigatório)
 - `cronograma` (lista de `{ atividade, descricao?, data? }`)
-- `tags` (opcional)
+- `tags` (lista ou string, opcional)
 
 **Exemplo**
 
@@ -231,12 +231,24 @@ Cria atividades de cronograma dentro de um tema.
 POST /create-notion-cronograma
 {
   "notion_token": "secret_xxx",
+  "nome_database": "Me Passa A Cola (GPT)",
   "tema": "Matéria X",
   "cronograma": [
-    { "atividade": "Ler capítulo 1", "data": "2024-04-02" }
-  ]
+    {
+      "atividade": "Ler capítulo 1",
+      "descricao": "Leitura inicial",
+      "data": "2024-04-02"
+    }
+  ],
+  "tags": ["leitura", "cap1"],
+  "outrasProps": {
+    "Professor": { "rich_text": [{ "text": { "content": "Fulano" } }] }
+  }
 }
 ```
+
+É possível enviar outras propriedades do Notion no campo `outrasProps`, seguindo
+o formato aceito pela API.
 
 **Resposta**
 

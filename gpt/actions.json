@@ -219,22 +219,50 @@
           },
           "nome_database": {
             "type": "string",
-            "description": "Nome Da Base"
+            "description": "Nome do banco de dados. Padrão 'Me Passa A Cola (GPT)'"
           },
-          "tema": { "type": "string" },
+          "tema": {
+            "type": "string",
+            "description": "Tema ou página principal"
+          },
           "cronograma": {
             "type": "array",
+            "description": "Lista de atividades do cronograma",
             "items": {
               "type": "object",
               "properties": {
-                "atividade": { "type": "string" },
-                "descricao": { "type": "string" },
-                "data": { "type": "string", "format": "date-time" }
+                "atividade": {
+                  "type": "string",
+                  "description": "Título da atividade"
+                },
+                "descricao": {
+                  "type": "string",
+                  "description": "Descrição opcional da atividade"
+                },
+                "data": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Data ou horário da tarefa"
+                }
               },
               "required": ["atividade"]
             }
           },
-          "tags": { "type": "string" }
+          "tags": {
+            "oneOf": [
+              {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              { "type": "string" }
+            ],
+            "description": "Lista de tags ou string separada por vírgulas"
+          },
+          "outrasProps": {
+            "type": "object",
+            "description": "Outras propriedades aceitas pelo Notion",
+            "additionalProperties": true
+          }
         },
         "required": ["tema", "cronograma", "notion_token"]
       },
