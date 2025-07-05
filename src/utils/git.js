@@ -12,6 +12,8 @@ async function cloneRepo(repoUrl, credentials) {
 
     if (!fs.existsSync(repoPath)) {
         await git.clone(authUrl, repoPath);
+    } else {
+        await simpleGit(repoPath).pull();
     }
 
     return repoPath;

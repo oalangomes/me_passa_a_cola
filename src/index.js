@@ -562,6 +562,100 @@ app.post('/git-commit', async (req, res) => {
     }
 });
 
+app.post('/create-notion-content-git', async (req, res) => {
+    if (req.header('x-api-token') !== API_TOKEN) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const {
+            repoUrl,
+            credentials,
+            commitMessage,
+            filePath,
+            branch = 'main',
+            ...notionData
+        } = req.body;
+
+        const {
+            notion_token,
+            nome_database = 'Me Passa A Cola (GPT)',
+            tema,
+            subtitulo,
+            tipo = 'Resumo',
+            resumo,
+            tags = [],
+            data,
+            ...outrasProps
+        } = notionData;
+
+        if (!repoUrl || !credentials || !commitMessage || !filePath) {
+            return res.status(400).json({ error: 'repoUrl, credentials, filePath e commitMessage são obrigatórios' });
+        }
+        if (!notion_token) return res.status(400).json({ error: 'Token do Notion é obrigatório.' });
+        if (!tema && !subtitulo) return res.status(400).json({ error: 'Tema ou subtítulo são obrigatórios.' });
+
+        const notion = new Client({ auth: notion_token });
+
+        let temaPage = null;
+        if (tema) {
+            temaPage = await getOrCreatePage({
+                notion,
+                databaseName: nome_database,
+                pageTitle: tema,
+                tags
+            });
+        }
+
+        const blocks = createEnhancedNotionBlocks(resumo);
+        const autoTags = extractTagsSmart(blocks, 5);
+        const finalTags = Array.from(new Set([...(tags || []), ...autoTags]));
+
+        let contentPage = null;
+        if (subtitulo) {
+            let parentTitle = null;
+            let subpageFlag = false;
+
+            if (temaPage) {
+                parentTitle = temaPage.properties[Object.keys(temaPage.properties).find(k => temaPage.properties[k].type === 'title')].title[0].plain_text;
+                subpageFlag = true;
+            }
+
+            contentPage = await getOrCreatePage({
+                notion,
+                databaseName: nome_database,
+                pageTitle: subtitulo,
+                tags: finalTags,
+                parentTitle: parentTitle,
+                asSubpage: subpageFlag,
+                contentMd: resumo,
+                otherProps: {
+                    ...(data && { Data: { date: { start: data } } }),
+                    Tipo: { select: { name: tipo } },
+                    ...outrasProps
+                }
+            });
+        }
+
+        const repoPath = await cloneRepo(repoUrl, credentials);
+        const fullPath = path.join(repoPath, filePath);
+        fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+        fs.writeFileSync(fullPath, resumo);
+
+        await commitAndPush(repoPath, commitMessage, [fullPath], branch);
+
+        res.json({
+            ok: true,
+            pageUrl: contentPage ? contentPage.url : temaPage ? temaPage.url : undefined,
+            gitFile: filePath,
+            autoTags: finalTags
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Para rodar local
 if (require.main === module) {
     const port = process.env.PORT || 3333;
