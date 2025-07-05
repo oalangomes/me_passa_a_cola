@@ -168,6 +168,21 @@
         "responses": { "200": { "description": "Sucesso" } }
       }
     },
+    "/send-to-doca": {
+      "post": {
+        "operationId": "enviarDoca",
+        "description": "Envia conteúdo para o serviço Doca.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/DocaContent" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
     "/github-issues": {
       "post": {
         "operationId": "criarIssue",
@@ -488,6 +503,14 @@
             "repo": { "type": "string" }
           },
           "required": ["token", "owner", "repo"]
+        },
+        "DocaContent": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string" },
+            "content": { "type": "string" }
+          },
+          "required": ["title", "content"]
         }
       }
     }

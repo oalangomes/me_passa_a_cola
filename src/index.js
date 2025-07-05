@@ -16,6 +16,7 @@ const {
 } = require('./utils/notion');
 const { cloneRepo, commitAndPush } = require('./utils/git');
 const { createIssue, updateIssue, closeIssue, listIssues } = require('./utils/github');
+const { sendToDoca } = require('./utils/doca');
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
@@ -739,6 +740,21 @@ app.get('/github-issues', async (req, res) => {
     try {
         const issues = await listIssues({ token, owner, repo, state, labels });
         res.json({ ok: true, issues });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ----- Integração com Doca -----
+app.post('/send-to-doca', async (req, res) => {
+    try {
+        const { title, content } = req.body;
+        if (!title || !content) {
+            return res.status(400).json({ error: 'title e content são obrigatórios' });
+        }
+        const result = await sendToDoca({ title, content });
+        res.json({ ok: true, result });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });

@@ -35,6 +35,7 @@ O GPT foi desenvolvido para:
 * **Sugestões de técnicas de estudo** (Pomodoro, Cornell, repetição espaçada)
 * **Recomendações de conteúdos extras** (vídeos, livros, podcasts)
 * **Flashcards automáticos**
+* **Envio de conteúdos para o Doca**
 
 ---
 
@@ -113,6 +114,10 @@ Crie um banco com os seguintes campos (com esses nomes e tipos):
 - Observacoes (Texto)
 - Tags (Multi-seleção)
 - Data (Data)
+
+## 🔗 Integração com Doca
+
+Configure as variáveis `DOCA_API_URL` e `DOCA_API_KEY` para permitir o envio de conteúdos ao serviço Doca.
 ## 🚀 Como rodar localmente
 
 Para executar o projeto em sua máquina, siga os passos abaixo:
@@ -458,6 +463,19 @@ DELETE /github-issues/{numero}
 
 ```http
 GET /github-issues?token=ghp_xxx&owner=usuario&repo=repositorio&state=open
+```
+
+## 📑 Endpoint para Doca
+
+Permite enviar conteúdos diretamente para o serviço **Doca**.
+
+```http
+POST /send-to-doca
+
+{
+  "title": "Meu arquivo",
+  "content": "Texto em Markdown"
+}
 ```
 
 ## 🔍 Validação automática do deploy
