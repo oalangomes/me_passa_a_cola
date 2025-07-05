@@ -408,6 +408,58 @@ POST /limpar-tags-orfas
 
 Retorna um resumo com a quantidade de tags removidas.
 
+## 🐙 Endpoints de Issues do GitHub
+
+Gerencie issues em repositórios diretamente pela API.
+
+### Criar Issue
+
+```http
+POST /github-issues
+
+{
+  "token": "ghp_xxx",
+  "owner": "usuario",
+  "repo": "repositorio",
+  "title": "Nova issue",
+  "body": "Descrição opcional",
+  "labels": ["bug"],
+  "assignees": ["usuario"]
+}
+```
+
+### Atualizar Issue
+
+```http
+PATCH /github-issues/{numero}
+
+{
+  "token": "ghp_xxx",
+  "owner": "usuario",
+  "repo": "repositorio",
+  "title": "Novo título",
+  "state": "open"
+}
+```
+
+### Fechar Issue
+
+```http
+DELETE /github-issues/{numero}
+
+{
+  "token": "ghp_xxx",
+  "owner": "usuario",
+  "repo": "repositorio"
+}
+```
+
+### Listar Issues
+
+```http
+GET /github-issues?token=ghp_xxx&owner=usuario&repo=repositorio&state=open
+```
+
 ## 🔍 Validação automática do deploy
 
 O repositório conta com um workflow do **GitHub Actions** que monitora se o

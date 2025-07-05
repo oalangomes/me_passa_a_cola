@@ -167,6 +167,49 @@
         },
         "responses": { "200": { "description": "Sucesso" } }
       }
+    },
+    "/github-issues": {
+      "post": {
+        "operationId": "criarIssue",
+        "description": "Cria uma issue no GitHub",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubIssueCreate" } } }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      },
+      "get": {
+        "operationId": "listarIssues",
+        "description": "Lista issues do repositório",
+        "parameters": [
+          { "name": "token", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "owner", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "repo", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "state", "in": "query", "required": false, "schema": { "type": "string", "default": "open" } },
+          { "name": "labels", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
+    "/github-issues/{number}": {
+      "patch": {
+        "operationId": "atualizarIssue",
+        "description": "Atualiza uma issue existente",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubIssueUpdate" } } }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      },
+      "delete": {
+        "operationId": "fecharIssue",
+        "description": "Fecha uma issue",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubIssueDelete" } } }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
     }
   },
   "components": {
@@ -376,20 +419,76 @@
         },
         "required": ["notion_token", "tema"]
       },
-      "LimparTagsOrfas": {
-        "type": "object",
-        "properties": {
-          "notion_token": {
-            "type": "string",
-            "description": "Token da integração do Notion (ntn_...)"
+        "LimparTagsOrfas": {
+          "type": "object",
+          "properties": {
+            "notion_token": {
+              "type": "string",
+              "description": "Token da integração do Notion (ntn_...)"
+            },
+            "nome_database": {
+              "type": "string",
+              "description": "Nome Da Base"
+            }
           },
-          "nome_database": {
-            "type": "string",
-            "description": "Nome Da Base"
-          }
+          "required": ["notion_token"]
         },
-        "required": ["notion_token"]
+        "GithubIssueCreate": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "owner": { "type": "string" },
+            "repo": { "type": "string" },
+            "title": { "type": "string" },
+            "body": { "type": "string" },
+            "labels": {
+              "oneOf": [
+                { "type": "array", "items": { "type": "string" } },
+                { "type": "string" }
+              ]
+            },
+            "assignees": {
+              "oneOf": [
+                { "type": "array", "items": { "type": "string" } },
+                { "type": "string" }
+              ]
+            }
+          },
+          "required": ["token", "owner", "repo", "title"]
+        },
+        "GithubIssueUpdate": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "owner": { "type": "string" },
+            "repo": { "type": "string" },
+            "title": { "type": "string" },
+            "body": { "type": "string" },
+            "state": { "type": "string" },
+            "labels": {
+              "oneOf": [
+                { "type": "array", "items": { "type": "string" } },
+                { "type": "string" }
+              ]
+            },
+            "assignees": {
+              "oneOf": [
+                { "type": "array", "items": { "type": "string" } },
+                { "type": "string" }
+              ]
+            }
+          },
+          "required": ["token", "owner", "repo"]
+        },
+        "GithubIssueDelete": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "owner": { "type": "string" },
+            "repo": { "type": "string" }
+          },
+          "required": ["token", "owner", "repo"]
+        }
       }
     }
   }
-}
