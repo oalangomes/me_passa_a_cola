@@ -214,6 +214,34 @@ app.post('/create-notion-cronograma', async (req, res) => {
         const created = [];
         for (const item of cronograma) {
             if (!item.atividade) continue;
+
+            const extraProps = {
+                ...(item.tipoEvento !== undefined && {
+                    'Tipo de Evento': { select: { name: item.tipoEvento } }
+                }),
+                ...(item.participantes !== undefined && {
+                    Participantes: { rich_text: [{ text: { content: String(item.participantes) } }] }
+                }),
+                ...(item.prioridade !== undefined && {
+                    Prioridade: { select: { name: item.prioridade } }
+                }),
+                ...(item.lembrete !== undefined && {
+                    Lembrete: { rich_text: [{ text: { content: String(item.lembrete) } }] }
+                }),
+                ...(item.status !== undefined && {
+                    Status: { select: { name: item.status } }
+                }),
+                ...(item.notas !== undefined && {
+                    Notas: { rich_text: [{ text: { content: String(item.notas) } }] }
+                }),
+                ...(item.local !== undefined && {
+                    Local: { rich_text: [{ text: { content: String(item.local) } }] }
+                }),
+                ...(item.linkRelacionado !== undefined && {
+                    'Link Relacionado': { url: String(item.linkRelacionado) }
+                })
+            };
+
             const page = await getOrCreatePage({
                 notion,
                 databaseName: nome_database,
@@ -225,6 +253,7 @@ app.post('/create-notion-cronograma', async (req, res) => {
                 otherProps: {
                     ...(item.data && { Data: { date: { start: item.data } } }),
                     Tipo: { select: { name: 'Cronograma' } },
+                    ...extraProps,
                     ...outrasProps
                 }
             });
