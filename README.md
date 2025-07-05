@@ -113,6 +113,34 @@ Crie um banco com os seguintes campos (com esses nomes e tipos):
 - Observacoes (Texto)
 - Tags (Multi-seleção)
 - Data (Data)
+
+## 📦 Integração com Doca
+
+Envie resumos e notas diretamente para a plataforma **Doca**.
+
+### Como usar
+
+1. Forneça seu **doca_token**.
+2. Opcionalmente defina a `baseUrl` da API.
+3. Chame o endpoint `/create-doca-content` com `tema`, `conteudo` e, se desejar, `tags`.
+
+**Exemplo**
+
+```http
+POST /create-doca-content
+{
+  "doca_token": "dk_xxx",
+  "tema": "Matéria X",
+  "conteudo": "Texto ou markdown",
+  "tags": ["exemplo"]
+}
+```
+
+Resposta:
+
+```json
+{ "ok": true }
+```
 ## 🚀 Como rodar localmente
 
 Para executar o projeto em sua máquina, siga os passos abaixo:

@@ -16,6 +16,14 @@ async function main() {
   });
 
   assert.strictEqual(res.status, 400);
+
+  const resDoca = await fetch(`http://localhost:${port}/create-doca-content`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({})
+  });
+
+  assert.strictEqual(resDoca.status, 400);
   server.close();
 
   await testCloneRepoPull();
