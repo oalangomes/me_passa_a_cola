@@ -41,4 +41,15 @@ async function listIssues({ token, owner, repo, state = 'open', labels = '' }) {
     return githubRequest(token, 'GET', `/repos/${owner}/${repo}/issues?${searchParams.toString()}`);
 }
 
-module.exports = { createIssue, updateIssue, closeIssue, listIssues };
+async function dispatchWorkflow({ token, owner, repo, workflow_id, ref = 'main', inputs = {} }) {
+    return githubRequest(token, 'POST', `/repos/${owner}/${repo}/actions/workflows/${workflow_id}/dispatches`, {
+        ref,
+        inputs
+    });
+}
+
+async function getWorkflowRun({ token, owner, repo, run_id }) {
+    return githubRequest(token, 'GET', `/repos/${owner}/${repo}/actions/runs/${run_id}`);
+}
+
+module.exports = { createIssue, updateIssue, closeIssue, listIssues, dispatchWorkflow, getWorkflowRun };

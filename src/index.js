@@ -15,7 +15,7 @@ const {
     sleep
 } = require('./utils/notion');
 const { cloneRepo, commitAndPush } = require('./utils/git');
-const { createIssue, updateIssue, closeIssue, listIssues } = require('./utils/github');
+const { createIssue, updateIssue, closeIssue, listIssues, dispatchWorkflow, getWorkflowRun } = require('./utils/github');
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
@@ -739,6 +739,35 @@ app.get('/github-issues', async (req, res) => {
     try {
         const issues = await listIssues({ token, owner, repo, state, labels });
         res.json({ ok: true, issues });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ----- GitHub Workflows -----
+app.post('/github-workflows/dispatch', async (req, res) => {
+    const { token, owner, repo, workflow_id, ref = 'main', inputs = {} } = req.body;
+    if (!token || !owner || !repo || !workflow_id) {
+        return res.status(400).json({ error: 'token, owner, repo e workflow_id são obrigatórios' });
+    }
+    try {
+        await dispatchWorkflow({ token, owner, repo, workflow_id, ref, inputs });
+        res.json({ ok: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/github-workflows/status', async (req, res) => {
+    const { token, owner, repo, run_id } = req.query;
+    if (!token || !owner || !repo || !run_id) {
+        return res.status(400).json({ error: 'token, owner, repo e run_id são obrigatórios' });
+    }
+    try {
+        const run = await getWorkflowRun({ token, owner, repo, run_id });
+        res.json({ ok: true, run });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
