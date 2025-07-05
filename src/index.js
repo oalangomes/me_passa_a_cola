@@ -27,6 +27,8 @@ const API_TOKEN = process.env.API_TOKEN || '';
 app.use(express.json());
 // Expose Swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// Documentação estática gerada com Doca
+app.use('/doca', express.static(path.join(__dirname, '..', 'docs')));
 
 // Endpoint principal
 app.post("/create-notion-content", async (req, res) => {

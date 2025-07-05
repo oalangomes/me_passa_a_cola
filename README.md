@@ -480,6 +480,11 @@ POST /github-workflows/dispatch
 GET /github-workflows/status?token=ghp_xxx&owner=usuario&repo=repositorio&run_id=12345
 ```
 
+## 📚 Documentação com Doca
+
+Execute `npm run doca` para gerar a documentação da API em `docs/API.md`.
+Depois de iniciar o servidor, acesse `http://localhost:3333/doca/API.md` para visualizar.
+
 ## 🔍 Validação automática do deploy
 
 O repositório conta com um workflow do **GitHub Actions** que monitora se o
