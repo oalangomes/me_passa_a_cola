@@ -1,4 +1,8 @@
-require('dotenv').config();
+try {
+    require('dotenv').config();
+} catch (err) {
+    console.warn('dotenv não encontrado, seguindo sem carregar variáveis');
+}
 // index.js
 const express = require('express');
 const { Client } = require('@notionhq/client');
@@ -16,6 +20,7 @@ const {
 } = require('./utils/notion');
 const { cloneRepo, commitAndPush } = require('./utils/git');
 const { createIssue, updateIssue, closeIssue, listIssues } = require('./utils/github');
+const { sendToDoca } = require('./utils/doca');
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
@@ -549,6 +554,20 @@ app.post('/limpar-tags-orfas', async (req, res) => {
 
         const resultado = await removerTagsOrfas(notion, db.id);
         res.json({ ok: true, ...resultado });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/create-doca-content', async (req, res) => {
+    try {
+        const { doca_token, baseUrl, tema, conteudo, tags = [] } = req.body;
+        if (!doca_token) return res.status(400).json({ error: 'Token da Doca é obrigatório.' });
+        if (!tema || !conteudo) return res.status(400).json({ error: 'Tema e conteúdo são obrigatórios.' });
+
+        const response = await sendToDoca({ doca_token, baseUrl, data: { tema, conteudo, tags } });
+        res.json({ ok: true, response });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
