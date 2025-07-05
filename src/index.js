@@ -15,6 +15,7 @@ const {
     sleep
 } = require('./utils/notion');
 const { cloneRepo, commitAndPush } = require('./utils/git');
+const { createIssue, updateIssue, closeIssue, listIssues } = require('./utils/github');
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
@@ -679,6 +680,65 @@ app.post('/create-notion-content-git', async (req, res) => {
             gitFile: filePath,
             autoTags: finalTags
         });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ----- GitHub Issues -----
+app.post('/github-issues', async (req, res) => {
+    const { token, owner, repo, title, body = '', labels = [], assignees = [] } = req.body;
+    if (!token || !owner || !repo || !title) {
+        return res.status(400).json({ error: 'token, owner, repo e title são obrigatórios' });
+    }
+    try {
+        const issue = await createIssue({ token, owner, repo, title, body, labels, assignees });
+        res.json({ ok: true, issue });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.patch('/github-issues/:number', async (req, res) => {
+    const { token, owner, repo } = req.body;
+    const { number } = req.params;
+    if (!token || !owner || !repo) {
+        return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
+    }
+    try {
+        const issue = await updateIssue({ token, owner, repo, issue_number: number, ...req.body });
+        res.json({ ok: true, issue });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/github-issues/:number', async (req, res) => {
+    const { token, owner, repo } = req.body;
+    const { number } = req.params;
+    if (!token || !owner || !repo) {
+        return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
+    }
+    try {
+        const issue = await closeIssue({ token, owner, repo, issue_number: number });
+        res.json({ ok: true, issue });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/github-issues', async (req, res) => {
+    const { token, owner, repo, state = 'open', labels = '' } = req.query;
+    if (!token || !owner || !repo) {
+        return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
+    }
+    try {
+        const issues = await listIssues({ token, owner, repo, state, labels });
+        res.json({ ok: true, issues });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });

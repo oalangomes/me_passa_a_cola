@@ -207,6 +207,7 @@ O endpoint `/atualizar-titulos-e-tags` revisa as subpáginas de um tema e ajusta
 - 📜 Gerar versão `.md` do chat
 - 💡 Sugestão de materiais
 - 🧠 Aplicar técnica de estudo
+- 🐙 Gerenciar issues no GitHub
 
 ## 🧩 Observações Técnicas para App Script
 
