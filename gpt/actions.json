@@ -210,6 +210,30 @@
         },
         "responses": { "200": { "description": "Sucesso" } }
       }
+    },
+    "/github-workflows/dispatch": {
+      "post": {
+        "operationId": "dispararWorkflow",
+        "description": "Dispara um workflow no GitHub",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubWorkflowDispatch" } } }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
+    "/github-workflows/status": {
+      "get": {
+        "operationId": "statusWorkflow",
+        "description": "Consulta o status de um workflow run",
+        "parameters": [
+          { "name": "token", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "owner", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "repo", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "run_id", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Sucesso" } }
+      }
     }
   },
   "components": {
@@ -488,6 +512,18 @@
             "repo": { "type": "string" }
           },
           "required": ["token", "owner", "repo"]
+        },
+        "GithubWorkflowDispatch": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "owner": { "type": "string" },
+            "repo": { "type": "string" },
+            "workflow_id": { "type": "string" },
+            "ref": { "type": "string", "default": "main" },
+            "inputs": { "type": "object" }
+          },
+          "required": ["token", "owner", "repo", "workflow_id"]
         }
       }
     }

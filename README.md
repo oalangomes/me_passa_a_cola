@@ -460,6 +460,26 @@ DELETE /github-issues/{numero}
 GET /github-issues?token=ghp_xxx&owner=usuario&repo=repositorio&state=open
 ```
 
+### Disparar Workflow
+
+```http
+POST /github-workflows/dispatch
+
+{
+  "token": "ghp_xxx",
+  "owner": "usuario",
+  "repo": "repositorio",
+  "workflow_id": "deploy.yml",
+  "ref": "main"
+}
+```
+
+### Verificar Status do Workflow
+
+```http
+GET /github-workflows/status?token=ghp_xxx&owner=usuario&repo=repositorio&run_id=12345
+```
+
 ## 🔍 Validação automática do deploy
 
 O repositório conta com um workflow do **GitHub Actions** que monitora se o
