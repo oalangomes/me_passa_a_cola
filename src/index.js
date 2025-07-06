@@ -30,6 +30,8 @@ const {
     createMilestone,
     createProject,
     createProjectColumn,
+    listProjects,
+    listProjectColumns,
     addIssueToProject,
     createPullRequest,
     updatePullRequest,
@@ -743,13 +745,32 @@ app.post('/create-notion-content-git', async (req, res) => {
 
 // ----- GitHub Issues -----
 app.post('/github-issues', async (req, res) => {
-    const { token, owner, repo, title, body = '', labels = [], assignees = [], template } = req.body;
+    const { token, owner, repo, title, body = '', labels = [], assignees = [], template, column_id } = req.body;
     if (!token || !owner || !repo || !title) {
         return res.status(400).json({ error: 'token, owner, repo e title são obrigatórios' });
     }
     try {
         const issueBody = body || (template ? loadTemplate('issue', template) : '');
         const issue = await createIssue({ token, owner, repo, title, body: issueBody, labels, assignees });
+        let finalColumnId = column_id;
+        if (!finalColumnId) {
+            try {
+                const projects = await listProjects({ token, owner, repo });
+                if (projects.length > 0) {
+                    const cols = await listProjectColumns({ token, project_id: projects[0].id });
+                    if (cols.length > 0) finalColumnId = cols[0].id;
+                }
+            } catch (projErr) {
+                console.warn('Falha ao obter projeto:', projErr.message);
+            }
+        }
+        if (finalColumnId) {
+            try {
+                await addIssueToProject({ token, column_id: finalColumnId, issue_id: issue.id });
+            } catch (projErr) {
+                console.warn('Falha ao adicionar issue ao projeto:', projErr.message);
+            }
+        }
         res.json({ ok: true, issue });
     } catch (err) {
         console.error(err);
@@ -867,6 +888,35 @@ app.post('/github-projects/columns/:column_id/cards', async (req, res) => {
     try {
         const card = await addIssueToProject({ token, column_id, issue_id });
         res.json({ ok: true, card });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/github-projects', async (req, res) => {
+    const { token, owner, repo } = req.query;
+    if (!token || !owner || !repo) {
+        return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
+    }
+    try {
+        const projects = await listProjects({ token, owner, repo });
+        res.json({ ok: true, projects });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/github-projects/:project_id/columns', async (req, res) => {
+    const { token } = req.query;
+    const { project_id } = req.params;
+    if (!token || !project_id) {
+        return res.status(400).json({ error: 'token e project_id são obrigatórios' });
+    }
+    try {
+        const columns = await listProjectColumns({ token, project_id });
+        res.json({ ok: true, columns });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });

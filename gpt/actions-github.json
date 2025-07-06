@@ -251,6 +251,16 @@
             "description": "Sucesso"
           }
         }
+      },
+      "get": {
+        "operationId": "listarProjetos",
+        "description": "Lista projetos do repositório",
+        "parameters": [
+          { "name": "token", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "owner", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "repo", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Sucesso" } }
       }
     },
     "/github-projects/{project_id}/columns": {
@@ -267,11 +277,16 @@
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": "Sucesso"
-          }
-        }
+        "responses": { "200": { "description": "Sucesso" } }
+      },
+      "get": {
+        "operationId": "listarColunasProjeto",
+        "description": "Lista colunas de um projeto",
+        "parameters": [
+          { "name": "token", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "project_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Sucesso" } }
       }
     },
     "/github-projects/columns/{column_id}/cards": {
@@ -402,6 +417,10 @@
                 "type": "string"
               }
             ]
+          },
+          "column_id": {
+            "type": "integer",
+            "description": "Opcional: ID da coluna do projeto. Se ausente, a primeira coluna do primeiro projeto será usada, se houver"
           }
         },
         "required": [

@@ -69,6 +69,14 @@ async function createProjectColumn({ token, project_id, name }) {
     return githubRequest(token, 'POST', `/projects/${project_id}/columns`, { name }, { 'Accept': 'application/vnd.github.inertia-preview+json' });
 }
 
+async function listProjects({ token, owner, repo }) {
+    return githubRequest(token, 'GET', `/repos/${owner}/${repo}/projects`, null, { 'Accept': 'application/vnd.github.inertia-preview+json' });
+}
+
+async function listProjectColumns({ token, project_id }) {
+    return githubRequest(token, 'GET', `/projects/${project_id}/columns`, null, { 'Accept': 'application/vnd.github.inertia-preview+json' });
+}
+
 async function addIssueToProject({ token, column_id, issue_id }) {
     return githubRequest(token, 'POST', `/projects/columns/${column_id}/cards`, { content_id: issue_id, content_type: 'Issue' }, { 'Accept': 'application/vnd.github.inertia-preview+json' });
 }
@@ -96,6 +104,8 @@ module.exports = {
     createMilestone,
     createProject,
     createProjectColumn,
+    listProjects,
+    listProjectColumns,
     addIssueToProject,
     createPullRequest,
     updatePullRequest,

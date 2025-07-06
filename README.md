@@ -428,9 +428,12 @@ POST /github-issues
   "title": "Nova issue",
   "body": "Descrição opcional",
   "labels": ["bug"],
-  "assignees": ["usuario"]
+  "assignees": ["usuario"],
+  "column_id": 123456
 }
 ```
+O campo `column_id` é opcional. Se não informado, a API tenta utilizar a primeira coluna do primeiro projeto encontrado no repositório.
+
 
 ### Atualizar Issue
 
@@ -524,6 +527,18 @@ POST /github-projects/columns/{column_id}/cards
   "token": "ghp_xxx",
   "issue_id": 1
 }
+```
+
+### Listar Projetos
+
+```http
+GET /github-projects?token=ghp_xxx&owner=usuario&repo=repositorio
+```
+
+### Listar Colunas do Projeto
+
+```http
+GET /github-projects/{project_id}/columns?token=ghp_xxx
 ```
 
 ### Criar Pull Request
