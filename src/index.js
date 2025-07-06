@@ -37,6 +37,7 @@ const {
     updatePullRequest,
     closePullRequest
 } = require('./utils/github');
+const { updateIssueProject } = require('./utils/linear');
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
@@ -991,6 +992,20 @@ app.get('/github-workflows/status', async (req, res) => {
     try {
         const run = await getWorkflowRun({ token, owner, repo, run_id });
         res.json({ ok: true, run });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/linear-issues/project', async (req, res) => {
+    const { token, issue_id, project_id } = req.body;
+    if (!token || !issue_id || !project_id) {
+        return res.status(400).json({ error: 'token, issue_id e project_id são obrigatórios' });
+    }
+    try {
+        const result = await updateIssueProject({ token, issueId: issue_id, projectId: project_id });
+        res.json({ ok: true, result });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
