@@ -35,6 +35,10 @@ O GPT foi desenvolvido para:
 * **Sugestões de técnicas de estudo** (Pomodoro, Cornell, repetição espaçada)
 * **Recomendações de conteúdos extras** (vídeos, livros, podcasts)
 * **Flashcards automáticos**
+* **Integração com Notion** para guardar resumos, cronogramas e flashcards
+* **Envio de PDFs convertidos em Markdown** diretamente para o banco
+* **Commits automáticos e gestão de issues no GitHub**
+* **Disparo e verificação de workflows do GitHub**
 
 ---
 
