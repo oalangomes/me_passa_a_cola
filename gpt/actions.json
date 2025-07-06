@@ -234,6 +234,92 @@
         ],
         "responses": { "200": { "description": "Sucesso" } }
       }
+    },
+    "/github-labels": {
+      "post": {
+        "operationId": "criarLabel",
+        "description": "Cria uma label no repositório",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubLabelCreate" } } }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
+    "/github-milestones": {
+      "post": {
+        "operationId": "criarMilestone",
+        "description": "Cria uma milestone",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubMilestoneCreate" } } }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
+    "/github-projects": {
+      "post": {
+        "operationId": "criarProjeto",
+        "description": "Cria um projeto classic",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubProjectCreate" } } }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
+    "/github-projects/{project_id}/columns": {
+      "post": {
+        "operationId": "criarColunaProjeto",
+        "description": "Cria coluna em um projeto",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubProjectColumnCreate" } } }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
+    "/github-projects/columns/{column_id}/cards": {
+      "post": {
+        "operationId": "adicionarIssueProjeto",
+        "description": "Adiciona issue ao projeto",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubProjectCardCreate" } } }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
+    "/github-pulls": {
+      "post": {
+        "operationId": "criarPullRequest",
+        "description": "Cria um pull request",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubPullCreate" } } }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
+    "/github-pulls/{number}": {
+      "patch": {
+        "operationId": "atualizarPullRequest",
+        "description": "Atualiza um pull request",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubPullUpdate" } } }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      },
+      "delete": {
+        "operationId": "fecharPullRequest",
+        "description": "Fecha um pull request",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubPullDelete" } } }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
     }
   },
   "components": {
@@ -524,6 +610,94 @@
             "inputs": { "type": "object" }
           },
           "required": ["token", "owner", "repo", "workflow_id"]
+        },
+        "GithubLabelCreate": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "owner": { "type": "string" },
+            "repo": { "type": "string" },
+            "name": { "type": "string" },
+            "color": { "type": "string" },
+            "description": { "type": "string" }
+          },
+          "required": ["token", "owner", "repo", "name"]
+        },
+        "GithubMilestoneCreate": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "owner": { "type": "string" },
+            "repo": { "type": "string" },
+            "title": { "type": "string" },
+            "state": { "type": "string" },
+            "description": { "type": "string" },
+            "due_on": { "type": "string" }
+          },
+          "required": ["token", "owner", "repo", "title"]
+        },
+        "GithubProjectCreate": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "owner": { "type": "string" },
+            "repo": { "type": "string" },
+            "name": { "type": "string" },
+            "body": { "type": "string" }
+          },
+          "required": ["token", "owner", "repo", "name"]
+        },
+        "GithubProjectColumnCreate": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "project_id": { "type": "string" },
+            "name": { "type": "string" }
+          },
+          "required": ["token", "project_id", "name"]
+        },
+        "GithubProjectCardCreate": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "column_id": { "type": "string" },
+            "issue_id": { "type": "integer" }
+          },
+          "required": ["token", "column_id", "issue_id"]
+        },
+        "GithubPullCreate": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "owner": { "type": "string" },
+            "repo": { "type": "string" },
+            "title": { "type": "string" },
+            "head": { "type": "string" },
+            "base": { "type": "string" },
+            "body": { "type": "string" }
+          },
+          "required": ["token", "owner", "repo", "title", "head", "base"]
+        },
+        "GithubPullUpdate": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "owner": { "type": "string" },
+            "repo": { "type": "string" },
+            "title": { "type": "string" },
+            "body": { "type": "string" },
+            "state": { "type": "string" }
+          },
+          "required": ["token", "owner", "repo"]
+        },
+        "GithubPullDelete": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "owner": { "type": "string" },
+            "repo": { "type": "string" }
+          },
+          "required": ["token", "owner", "repo"]
         }
       }
     }

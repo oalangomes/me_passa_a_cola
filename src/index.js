@@ -1,4 +1,8 @@
-require('dotenv').config();
+try {
+    require('dotenv').config();
+} catch (err) {
+    console.warn('dotenv not found, skipping');
+}
 // index.js
 const express = require('express');
 const { Client } = require('@notionhq/client');
@@ -15,7 +19,22 @@ const {
     sleep
 } = require('./utils/notion');
 const { cloneRepo, commitAndPush } = require('./utils/git');
-const { createIssue, updateIssue, closeIssue, listIssues, dispatchWorkflow, getWorkflowRun } = require('./utils/github');
+const {
+    createIssue,
+    updateIssue,
+    closeIssue,
+    listIssues,
+    dispatchWorkflow,
+    getWorkflowRun,
+    createLabel,
+    createMilestone,
+    createProject,
+    createProjectColumn,
+    addIssueToProject,
+    createPullRequest,
+    updatePullRequest,
+    closePullRequest
+} = require('./utils/github');
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
@@ -29,6 +48,17 @@ app.use(express.json());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 // Documentação estática gerada com Doca
 app.use('/doca', express.static(path.join(__dirname, '..', 'docs')));
+
+function loadTemplate(type, name = '') {
+    try {
+        const file = type === 'issue'
+            ? path.join(__dirname, '..', '.github', 'ISSUE_TEMPLATE', `${name}.md`)
+            : path.join(__dirname, '..', '.github', 'PULL_REQUEST_TEMPLATE.md');
+        return fs.readFileSync(file, 'utf8');
+    } catch (err) {
+        return '';
+    }
+}
 
 // Endpoint principal
 app.post("/create-notion-content", async (req, res) => {
@@ -690,12 +720,13 @@ app.post('/create-notion-content-git', async (req, res) => {
 
 // ----- GitHub Issues -----
 app.post('/github-issues', async (req, res) => {
-    const { token, owner, repo, title, body = '', labels = [], assignees = [] } = req.body;
+    const { token, owner, repo, title, body = '', labels = [], assignees = [], template } = req.body;
     if (!token || !owner || !repo || !title) {
         return res.status(400).json({ error: 'token, owner, repo e title são obrigatórios' });
     }
     try {
-        const issue = await createIssue({ token, owner, repo, title, body, labels, assignees });
+        const issueBody = body || (template ? loadTemplate('issue', template) : '');
+        const issue = await createIssue({ token, owner, repo, title, body: issueBody, labels, assignees });
         res.json({ ok: true, issue });
     } catch (err) {
         console.error(err);
@@ -741,6 +772,123 @@ app.get('/github-issues', async (req, res) => {
     try {
         const issues = await listIssues({ token, owner, repo, state, labels });
         res.json({ ok: true, issues });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/github-labels', async (req, res) => {
+    const { token, owner, repo, name, color = 'ffffff', description = '' } = req.body;
+    if (!token || !owner || !repo || !name) {
+        return res.status(400).json({ error: 'token, owner, repo e name são obrigatórios' });
+    }
+    try {
+        const label = await createLabel({ token, owner, repo, name, color, description });
+        res.json({ ok: true, label });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/github-milestones', async (req, res) => {
+    const { token, owner, repo, title, state = 'open', description = '', due_on } = req.body;
+    if (!token || !owner || !repo || !title) {
+        return res.status(400).json({ error: 'token, owner, repo e title são obrigatórios' });
+    }
+    try {
+        const milestone = await createMilestone({ token, owner, repo, title, state, description, due_on });
+        res.json({ ok: true, milestone });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/github-projects', async (req, res) => {
+    const { token, owner, repo, name, body = '' } = req.body;
+    if (!token || !owner || !repo || !name) {
+        return res.status(400).json({ error: 'token, owner, repo e name são obrigatórios' });
+    }
+    try {
+        const project = await createProject({ token, owner, repo, name, body });
+        res.json({ ok: true, project });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/github-projects/:project_id/columns', async (req, res) => {
+    const { token, name } = req.body;
+    const { project_id } = req.params;
+    if (!token || !project_id || !name) {
+        return res.status(400).json({ error: 'token, project_id e name são obrigatórios' });
+    }
+    try {
+        const column = await createProjectColumn({ token, project_id, name });
+        res.json({ ok: true, column });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/github-projects/columns/:column_id/cards', async (req, res) => {
+    const { token, issue_id } = req.body;
+    const { column_id } = req.params;
+    if (!token || !column_id || !issue_id) {
+        return res.status(400).json({ error: 'token, column_id e issue_id são obrigatórios' });
+    }
+    try {
+        const card = await addIssueToProject({ token, column_id, issue_id });
+        res.json({ ok: true, card });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/github-pulls', async (req, res) => {
+    const { token, owner, repo, title, head, base, body = '' } = req.body;
+    if (!token || !owner || !repo || !title || !head || !base) {
+        return res.status(400).json({ error: 'token, owner, repo, title, head e base são obrigatórios' });
+    }
+    try {
+        const prBody = body || loadTemplate('pr');
+        const pull = await createPullRequest({ token, owner, repo, title, head, base, body: prBody });
+        res.json({ ok: true, pull });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.patch('/github-pulls/:number', async (req, res) => {
+    const { token, owner, repo } = req.body;
+    const { number } = req.params;
+    if (!token || !owner || !repo) {
+        return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
+    }
+    try {
+        const pull = await updatePullRequest({ token, owner, repo, pull_number: number, ...req.body });
+        res.json({ ok: true, pull });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/github-pulls/:number', async (req, res) => {
+    const { token, owner, repo } = req.body;
+    const { number } = req.params;
+    if (!token || !owner || !repo) {
+        return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
+    }
+    try {
+        const pull = await closePullRequest({ token, owner, repo, pull_number: number });
+        res.json({ ok: true, pull });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
