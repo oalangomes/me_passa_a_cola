@@ -39,13 +39,36 @@ const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
-const swaggerDocument = require('../gpt/actions.json');
+
+function loadSwaggerDocs() {
+    const dir = path.join(__dirname, '..', 'gpt');
+    const files = fs.readdirSync(dir).filter(f => /^actions.*\.json$/.test(f));
+    const specs = files.map(f => JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')));
+    if (specs.length === 0) return {};
+    const base = specs.shift();
+    for (const spec of specs) {
+        Object.assign(base.paths, spec.paths);
+        if (spec.components && spec.components.schemas) {
+            base.components = base.components || { schemas: {} };
+            base.components.schemas = {
+                ...base.components.schemas,
+                ...spec.components.schemas,
+            };
+        }
+    }
+    return base;
+}
+
+const swaggerDocument = loadSwaggerDocs();
 
 const app = express();
 const API_TOKEN = process.env.API_TOKEN || '';
 app.use(express.json());
 // Expose Swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.get('/api-docs.json', (req, res) => {
+    res.json(swaggerDocument);
+});
 // Documentação estática gerada com Doca
 app.use('/doca', express.static(path.join(__dirname, '..', 'docs')));
 

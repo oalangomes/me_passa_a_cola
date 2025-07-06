@@ -589,6 +589,15 @@ GET /github-workflows/status?token=ghp_xxx&owner=usuario&repo=repositorio&run_id
 Execute `npm run doca` para gerar a documentação da API em `docs/API.md`.
 Depois de iniciar o servidor, acesse `http://localhost:3333/doca/API.md` para visualizar.
 
+### Ações para GPT personalizado
+
+Os endpoints foram divididos em dois arquivos dentro de `gpt/`:
+
+- `actions-notion.json` – somente rotas relacionadas ao Notion;
+- `actions-github.json` – rotas de integrações com o GitHub.
+
+Ao criar seu GPT, envie um ou ambos os arquivos na etapa de **Actions** para habilitar as funcionalidades desejadas.
+
 ## 🔍 Validação automática do deploy
 
 O repositório conta com um workflow do **GitHub Actions** que monitora se o
