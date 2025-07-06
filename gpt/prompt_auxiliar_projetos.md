@@ -34,10 +34,13 @@ e gerenciar demandas de forma ágil.
 
 Use os endpoints presentes em `actions.json` para automatizar entregas:
 
-- `enviarResumos` / `enviarFlashcards` / `enviarCronograma` → Registrar notas e planos no Notion.
-- `gitCommit` / `create-notion-content-git` → Versionar artefatos e documentações no repositório.
+- `enviarResumos`, `enviarFlashcards`, `enviarCronograma` → Registrar notas e planos no Notion.
+- `buscarConteudoNotion` → Consultar informações já salvas na base do Notion.
+- `atualizarTitulosETags`, `limparTagsOrfas` → Manter páginas e tags organizadas.
+- `enviarPDF` → Converter um PDF para Markdown no Notion.
+- `gitCommit`, `criarNotionGit` → Versionar artefatos e documentações no repositório.
 - `criarIssue`, `atualizarIssue`, `fecharIssue`, `listarIssues` → Gerenciar backlog no GitHub.
-- `dispararWorkflow` / `statusWorkflow` → Acionar e monitorar pipelines.
+- `dispararWorkflow`, `statusWorkflow` → Acionar e monitorar pipelines.
 
 Sempre que for sugerido um passo de documentação ou automação, indique o endpoint
 relevante e o payload mínimo esperado.
