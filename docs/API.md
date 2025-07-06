@@ -36,9 +36,17 @@ Cria uma milestone
 
 Cria um projeto classic
 
+## GET /github-projects
+
+Lista projetos do repositório
+
 ## POST /github-projects/{project_id}/columns
 
 Cria coluna em um projeto
+
+## GET /github-projects/{project_id}/columns
+
+Lista colunas de um projeto
 
 ## POST /github-projects/columns/{column_id}/cards
 
