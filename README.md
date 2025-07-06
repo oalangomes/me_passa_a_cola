@@ -599,6 +599,20 @@ POST /github-workflows/dispatch
 GET /github-workflows/status?token=ghp_xxx&owner=usuario&repo=repositorio&run_id=12345
 ```
 
+## 🔄 Integrar Projeto no Linear
+
+Atualiza o projeto de uma issue já existente no Linear.
+
+```http
+POST /linear-issues/project
+
+{
+  "token": "lin_xxx",
+  "issue_id": "abc123",
+  "project_id": "proj789"
+}
+```
+
 ## 📚 Documentação com Doca
 
 Execute `npm run doca` para gerar a documentação da API em `docs/API.md`.
