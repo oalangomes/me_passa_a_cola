@@ -1,5 +1,61 @@
 # API
 
+## POST /github-issues
+
+Cria uma issue no GitHub
+
+## GET /github-issues
+
+Lista issues do repositório
+
+## PATCH /github-issues/{number}
+
+Atualiza uma issue existente
+
+## DELETE /github-issues/{number}
+
+Fecha uma issue
+
+## POST /github-workflows/dispatch
+
+Dispara um workflow no GitHub
+
+## GET /github-workflows/status
+
+Consulta o status de um workflow run
+
+## POST /github-labels
+
+Cria uma label no repositório
+
+## POST /github-milestones
+
+Cria uma milestone
+
+## POST /github-projects
+
+Cria um projeto classic
+
+## POST /github-projects/{project_id}/columns
+
+Cria coluna em um projeto
+
+## POST /github-projects/columns/{column_id}/cards
+
+Adiciona issue ao projeto
+
+## POST /github-pulls
+
+Cria um pull request
+
+## PATCH /github-pulls/{number}
+
+Atualiza um pull request
+
+## DELETE /github-pulls/{number}
+
+Fecha um pull request
+
 ## POST /create-notion-content
 
 Envia o conteúdo dos resumos Notion informados no corpo.
@@ -24,39 +80,15 @@ Atualiza títulos e tags das subpáginas de um tema no Notion.
 
 Remove tags não utilizadas do banco de dados.
 
-## POST /git-commit
+## POST /pdf-to-notion
 
-Realiza commit em repositório privado usando token
+Envia um PDF em base64 para conversão em Markdown e registro no Notion.
 
 ## POST /create-notion-content-git
 
 Cria página no Notion e salva em repositório Git.
 
-## POST /pdf-to-notion
+## POST /git-commit
 
-Envia um PDF em base64 para conversão em Markdown e registro no Notion.
-
-## POST /github-issues
-
-Cria uma issue no GitHub
-
-## GET /github-issues
-
-Lista issues do repositório
-
-## PATCH /github-issues/{number}
-
-Atualiza uma issue existente
-
-## DELETE /github-issues/{number}
-
-Fecha uma issue
-
-## POST /github-workflows/dispatch
-
-Dispara um workflow no GitHub
-
-## GET /github-workflows/status
-
-Consulta o status de um workflow run
+Realiza commit em repositório privado usando token
 
