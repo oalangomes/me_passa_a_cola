@@ -464,6 +464,106 @@ DELETE /github-issues/{numero}
 GET /github-issues?token=ghp_xxx&owner=usuario&repo=repositorio&state=open
 ```
 
+### Criar Label
+
+```http
+POST /github-labels
+
+{
+  "token": "ghp_xxx",
+  "owner": "usuario",
+  "repo": "repositorio",
+  "name": "nova-label",
+  "color": "f29513"
+}
+```
+
+### Criar Milestone
+
+```http
+POST /github-milestones
+
+{
+  "token": "ghp_xxx",
+  "owner": "usuario",
+  "repo": "repositorio",
+  "title": "Sprint 1"
+}
+```
+
+### Criar Projeto (classic)
+
+```http
+POST /github-projects
+
+{
+  "token": "ghp_xxx",
+  "owner": "usuario",
+  "repo": "repositorio",
+  "name": "Projeto X"
+}
+```
+
+### Criar Column no Projeto
+
+```http
+POST /github-projects/{project_id}/columns
+
+{
+  "token": "ghp_xxx",
+  "name": "To Do"
+}
+```
+
+### Adicionar Issue ao Projeto
+
+```http
+POST /github-projects/columns/{column_id}/cards
+
+{
+  "token": "ghp_xxx",
+  "issue_id": 1
+}
+```
+
+### Criar Pull Request
+
+```http
+POST /github-pulls
+
+{
+  "token": "ghp_xxx",
+  "owner": "usuario",
+  "repo": "repositorio",
+  "title": "Minha feature",
+  "head": "feature-branch",
+  "base": "main"
+}
+```
+
+### Atualizar/Fechar Pull Request
+
+```http
+PATCH /github-pulls/{numero}
+
+{
+  "token": "ghp_xxx",
+  "owner": "usuario",
+  "repo": "repositorio",
+  "title": "Novo título"
+}
+```
+
+```http
+DELETE /github-pulls/{numero}
+
+{
+  "token": "ghp_xxx",
+  "owner": "usuario",
+  "repo": "repositorio"
+}
+```
+
 ### Disparar Workflow
 
 ```http
