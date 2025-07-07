@@ -137,9 +137,10 @@ Para executar o projeto em sua máquina, siga os passos abaixo:
    Caso prefira, crie um arquivo `.env` com suas variáveis (`API_TOKEN`, `PORT`, etc.).
    Ao executar `npm start`, esse arquivo será carregado automaticamente.
 
-4. Para executar os testes automatizados, utilize:
+4. Para executar os testes automatizados, primeiro instale as dependências e depois rode o comando:
 
    ```bash
+   npm install
    npm test
    ```
 
