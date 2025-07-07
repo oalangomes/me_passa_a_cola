@@ -24,7 +24,7 @@ jobs:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           CI: true
         run: |
-          render deploys create ${{ inputs.serviceID }} --output json --confirm
+          render deploys create srv-d0sejoc9c44c73f3u6d0 --output json --confirm
 
       - name: Aguardar estabilização (60s)
         run: sleep 60
