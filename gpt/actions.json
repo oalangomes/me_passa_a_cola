@@ -503,7 +503,7 @@
             "additionalProperties": { "type": "string" }
           }
         },
-        "required": ["repoUrl", "credentials", "message"]
+        "required": ["repoUrl", "credentials"]
   },
 
       "NotionContentGit": {
@@ -527,7 +527,7 @@
           "tags": { "type": "string" },
           "data": { "type": "string", "format": "date-time" }
         },
-        "required": ["repoUrl", "credentials", "commitMessage", "filePath", "notion_token", "resumo"]
+        "required": ["repoUrl", "credentials", "filePath", "notion_token", "resumo"]
       },
       "NotionPdf": {
         "type": "object",

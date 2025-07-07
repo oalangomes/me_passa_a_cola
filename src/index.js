@@ -42,6 +42,7 @@ const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
+const { loadColaConfig, loadCommitTemplate } = require('./utils/cola-config');
 
 function loadSwaggerDocs() {
     const dir = path.join(__dirname, '..', 'gpt');
@@ -673,17 +674,23 @@ app.patch('/git-file', async (req, res) => {
         branch = 'main'
     } = req.body;
 
-    if (!repoUrl || !credentials || !filePath || !commitMessage) {
-        return res.status(400).json({ error: 'repoUrl, credentials, filePath e commitMessage são obrigatórios' });
+    if (!repoUrl || !credentials || !filePath) {
+        return res.status(400).json({ error: 'repoUrl, credentials e filePath são obrigatórios' });
     }
 
     try {
         const repoPath = await cloneRepo(repoUrl, credentials);
+        const config = loadColaConfig(repoPath);
+        let finalMsg = commitMessage;
+        if (!finalMsg) {
+            const templatePath = config.commitTemplate || '.github/commit-template.md';
+            finalMsg = loadCommitTemplate(repoPath, templatePath) || 'chore: update file';
+        }
         const fullPath = path.join(repoPath, filePath);
         fs.mkdirSync(path.dirname(fullPath), { recursive: true });
         fs.writeFileSync(fullPath, content);
 
-        await commitAndPush(repoPath, commitMessage, [fullPath], branch);
+        await commitAndPush(repoPath, finalMsg, [fullPath], branch);
 
         res.json({ ok: true });
     } catch (err) {
@@ -706,12 +713,18 @@ app.post('/git-commit', async (req, res) => {
         content = {}
     } = req.body;
 
-    if (!repoUrl || !credentials || !message) {
-        return res.status(400).json({ error: 'repoUrl, credentials and message are required' });
+    if (!repoUrl || !credentials) {
+        return res.status(400).json({ error: 'repoUrl and credentials are required' });
     }
 
     try {
         const repoPath = await cloneRepo(repoUrl, credentials);
+        const config = loadColaConfig(repoPath);
+        let finalMsg = message;
+        if (!finalMsg) {
+            const templatePath = config.commitTemplate || '.github/commit-template.md';
+            finalMsg = loadCommitTemplate(repoPath, templatePath) || 'chore: update files';
+        }
 
         for (const [filePath, fileContent] of Object.entries(content)) {
             const fullPath = path.join(repoPath, filePath);
@@ -720,7 +733,7 @@ app.post('/git-commit', async (req, res) => {
         }
 
         const pathsToAdd = files.map(f => path.join(repoPath, f));
-        await commitAndPush(repoPath, message, pathsToAdd, branch);
+        await commitAndPush(repoPath, finalMsg, pathsToAdd, branch);
 
         res.json({ ok: true });
     } catch (err) {
@@ -756,8 +769,8 @@ app.post('/create-notion-content-git', async (req, res) => {
             ...outrasProps
         } = notionData;
 
-        if (!repoUrl || !credentials || !commitMessage || !filePath) {
-            return res.status(400).json({ error: 'repoUrl, credentials, filePath e commitMessage são obrigatórios' });
+        if (!repoUrl || !credentials || !filePath) {
+            return res.status(400).json({ error: 'repoUrl, credentials e filePath são obrigatórios' });
         }
         if (!notion_token) return res.status(400).json({ error: 'Token do Notion é obrigatório.' });
         if (!tema && !subtitulo) return res.status(400).json({ error: 'Tema ou subtítulo são obrigatórios.' });
@@ -805,11 +818,17 @@ app.post('/create-notion-content-git', async (req, res) => {
         }
 
         const repoPath = await cloneRepo(repoUrl, credentials);
+        const config = loadColaConfig(repoPath);
+        let finalMsg = commitMessage;
+        if (!finalMsg) {
+            const templatePath = config.commitTemplate || '.github/commit-template.md';
+            finalMsg = loadCommitTemplate(repoPath, templatePath) || 'chore: add content';
+        }
         const fullPath = path.join(repoPath, filePath);
         fs.mkdirSync(path.dirname(fullPath), { recursive: true });
         fs.writeFileSync(fullPath, resumo);
 
-        await commitAndPush(repoPath, commitMessage, [fullPath], branch);
+        await commitAndPush(repoPath, finalMsg, [fullPath], branch);
 
         res.json({
             ok: true,
