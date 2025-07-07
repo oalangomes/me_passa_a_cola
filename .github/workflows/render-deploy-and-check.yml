@@ -10,15 +10,12 @@ jobs:
     steps:
       - name: Aguardar estabilização (60s)
         run: sleep 60
+        - uses: actions/checkout@v3
 
       - uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      - name: Verificar status da aplicação
-        run: |
-          npm ci
-          node scripts/check-deploy.js
       - name: Verificar status da aplicação
         run: |
           npm ci
