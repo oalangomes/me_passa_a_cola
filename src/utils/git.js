@@ -37,4 +37,9 @@ async function listRepoFiles(repoPath, dir = '.') {
     return entries.map(e => ({ name: e.name, isDirectory: e.isDirectory() }));
 }
 
-module.exports = { cloneRepo, commitAndPush, listRepoFiles };
+async function readRepoFile(repoPath, filePath) {
+    const target = path.join(repoPath, filePath);
+    return fs.promises.readFile(target, 'utf8');
+}
+
+module.exports = { cloneRepo, commitAndPush, listRepoFiles, readRepoFile };

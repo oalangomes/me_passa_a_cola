@@ -8,6 +8,7 @@ const { execSync } = require('child_process');
 async function main() {
   await testBasicEndpoints();
   await testCloneRepoPull();
+  await testGitFileRoute();
   await testGithubProjectRoutes();
 }
 
@@ -58,6 +59,28 @@ async function testCloneRepoPull() {
   const repoPath2 = await cloneRepo('/tmp/origin.git');
   const content = fs.readFileSync(path.join(repoPath2, 'file.txt'), 'utf8');
   assert.strictEqual(content.trim(), 'v2');
+}
+
+async function testGitFileRoute() {
+  execSync('rm -rf /tmp/origin3.git');
+  execSync('git init --bare /tmp/origin3.git');
+
+  execSync('rm -rf /tmp/work3');
+  execSync('git clone /tmp/origin3.git /tmp/work3');
+  fs.writeFileSync('/tmp/work3/readme.txt', 'hello');
+  execSync('cd /tmp/work3 && git add readme.txt && git commit -m init && git push origin master');
+
+  const server = startServer();
+  const port = server.address().port;
+
+  const res = await fetch(`http://localhost:${port}/git-file?repoUrl=/tmp/origin3.git&credentials=&file=readme.txt`, {
+    headers: { 'x-api-token': '' }
+  });
+  assert.strictEqual(res.status, 200);
+  const data = await res.json();
+  assert.strictEqual(data.content.trim(), 'hello');
+
+  server.close();
 }
 
 async function testGithubProjectRoutes() {
