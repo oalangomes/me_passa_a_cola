@@ -38,7 +38,10 @@ Envia um PDF em base64 para conversão em Markdown e registro no Notion.
 
 ## POST /github-issues
 
-Cria uma issue no GitHub
+Cria uma issue no GitHub.
+Se `milestone` ou `column_id` não forem enviados,
+os valores `defaultIssueMilestone`, `defaultIssueProject` e `defaultIssueColumn`
+do arquivo `.cola-config` são utilizados, quando presentes.
 
 ## GET /github-issues
 

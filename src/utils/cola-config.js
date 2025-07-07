@@ -28,6 +28,13 @@ function loadColaConfig(repoPath) {
             const content = fs.readFileSync(jsonPath, 'utf8');
             config = JSON.parse(content);
         }
+        // normaliza valores numéricos opcionais
+        ['defaultIssueMilestone', 'defaultIssueProject', 'defaultIssueColumn'].forEach(k => {
+            if (config[k] !== undefined) {
+                const n = Number(config[k]);
+                if (!isNaN(n)) config[k] = n;
+            }
+        });
     } catch (err) {
         console.warn('Falha ao ler configuração:', err.message);
     }
