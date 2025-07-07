@@ -659,6 +659,39 @@ app.get('/git-file', async (req, res) => {
     }
 });
 
+app.patch('/git-file', async (req, res) => {
+    if (req.header('x-api-token') !== API_TOKEN) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const {
+        repoUrl,
+        credentials,
+        filePath,
+        content,
+        commitMessage,
+        branch = 'main'
+    } = req.body;
+
+    if (!repoUrl || !credentials || !filePath || !commitMessage) {
+        return res.status(400).json({ error: 'repoUrl, credentials, filePath e commitMessage são obrigatórios' });
+    }
+
+    try {
+        const repoPath = await cloneRepo(repoUrl, credentials);
+        const fullPath = path.join(repoPath, filePath);
+        fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+        fs.writeFileSync(fullPath, content);
+
+        await commitAndPush(repoPath, commitMessage, [fullPath], branch);
+
+        res.json({ ok: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.post('/git-commit', async (req, res) => {
     if (req.header('x-api-token') !== API_TOKEN) {
         return res.status(401).json({ error: 'Unauthorized' });
