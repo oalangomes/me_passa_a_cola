@@ -18,7 +18,7 @@ const {
     getOrCreatePage,
     sleep
 } = require('./utils/notion');
-const { cloneRepo, commitAndPush } = require('./utils/git');
+const { cloneRepo, commitAndPush, listRepoFiles } = require('./utils/git');
 const {
     createIssue,
     updateIssue,
@@ -611,6 +611,27 @@ app.post('/limpar-tags-orfas', async (req, res) => {
 
         const resultado = await removerTagsOrfas(notion, db.id);
         res.json({ ok: true, ...resultado });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/git-files', async (req, res) => {
+    if (req.header('x-api-token') !== API_TOKEN) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { repoUrl, credentials, path: dir = '.' } = req.query;
+
+    if (!repoUrl || !credentials) {
+        return res.status(400).json({ error: 'repoUrl e credentials são obrigatórios' });
+    }
+
+    try {
+        const repoPath = await cloneRepo(repoUrl, credentials);
+        const files = await listRepoFiles(repoPath, dir);
+        res.json({ ok: true, files });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });

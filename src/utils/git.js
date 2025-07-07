@@ -31,4 +31,10 @@ async function commitAndPush(repoPath, message, files = [], branch = 'main') {
     await git.push('origin', branch);
 }
 
-module.exports = { cloneRepo, commitAndPush };
+async function listRepoFiles(repoPath, dir = '.') {
+    const target = path.join(repoPath, dir);
+    const entries = await fs.promises.readdir(target, { withFileTypes: true });
+    return entries.map(e => ({ name: e.name, isDirectory: e.isDirectory() }));
+}
+
+module.exports = { cloneRepo, commitAndPush, listRepoFiles };
