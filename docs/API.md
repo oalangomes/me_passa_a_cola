@@ -80,6 +80,9 @@ Lista projetos do repositório
 
 Cria coluna em um projeto via GraphQL
 
+> **Nota**: se a resposta do GitHub contiver `errors`, o serviço retorna
+> a mensagem de erro fornecida pela API.
+
 ## GET /github-projects/{project_id}/columns
 
 Lista colunas de um projeto
