@@ -4,22 +4,23 @@ on:
   workflow_dispatch:
   push:
     branches: ["master"]
+
 jobs:
   check-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Aguardar estabilização (60s)
         run: sleep 60
-        - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v3
+      - name: Checkout do repositório
+        uses: actions/checkout@v3
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      - name: Verificar status da aplicação
+      - name: Instalar dependências e verificar deploy
         run: |
           npm ci
           node scripts/check-deploy.js
-
-
-
