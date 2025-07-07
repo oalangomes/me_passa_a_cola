@@ -378,6 +378,37 @@ Ao executar `npm start`, esse arquivo será lido automaticamente:
 API_TOKEN=seu_token PORT=3333 npm start
 ```
 
+### 📁 Arquivo de configuração `.cola-config`
+
+Dentro de qualquer repositório usado pelas rotas de Git é possível criar um arquivo
+`.cola-config.yml` ou `.cola-config.json` com ajustes extras. Atualmente o campo
+`commitTemplate` permite definir o caminho de um template de commit utilizado quando
+`commitMessage` não é informado.
+
+Exemplo em YAML:
+
+```yaml
+commitTemplate: .github/commit-template.md
+```
+
+Ou em JSON:
+
+```json
+{
+  "commitTemplate": ".github/commit-template.md"
+}
+```
+
+Crie também o arquivo citado no campo `commitTemplate`. Esse documento será lido
+como base para a mensagem de commit. Caso não exista configuração, o caminho
+padrão procurado é `.github/commit-template.md`.
+
+Exemplo de `.github/commit-template.md`:
+
+```text
+chore: atualiza documentos
+```
+
 ## 📄 Endpoint para PDF
 
 Envia um arquivo PDF em base64 e registra o texto no Notion.
