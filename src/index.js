@@ -917,6 +917,9 @@ app.get('/github-projects/:project_id/columns', async (req, res) => {
     }
     try {
         const columns = await listProjectColumns({ token, project_id });
+        if (!columns.length) {
+            return res.json({ ok: true, columns: [], msg: 'Nenhuma coluna encontrada.' });
+        }
         res.json({ ok: true, columns });
     } catch (err) {
         console.error(err);

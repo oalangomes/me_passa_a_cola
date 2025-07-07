@@ -107,7 +107,13 @@ async function listProjects({ token, owner, repo }) {
 async function listProjectColumns({ token, project_id }) {
     const query = `query ($projectId: ID!) {\n  node(id: $projectId) {\n    ... on Project {\n      columns(first: 100) { nodes { id name } }\n    }\n  }\n}`;
     const result = await githubGraphqlRequest(token, query, { projectId: project_id });
-    return result.data.node.columns.nodes;
+    if (!result.data.node) {
+        throw new Error('Projeto não encontrado ou ID inválido');
+    }
+    if (!result.data.node.columns) {
+        return [];
+    }
+    return result.data.node.columns.nodes || [];
 }
 
 async function addIssueToProject({ token, column_id, issue_id }) {
