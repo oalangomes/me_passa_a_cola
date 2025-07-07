@@ -494,7 +494,7 @@ POST /github-milestones
 }
 ```
 
-### Criar Projeto (classic)
+### Criar Projeto (GraphQL)
 
 ```http
 POST /github-projects
@@ -507,7 +507,7 @@ POST /github-projects
 }
 ```
 
-### Criar Column no Projeto
+### Criar Column no Projeto (GraphQL)
 
 ```http
 POST /github-projects/{project_id}/columns
@@ -518,14 +518,14 @@ POST /github-projects/{project_id}/columns
 }
 ```
 
-### Adicionar Issue ao Projeto
+### Adicionar Issue ao Projeto (use `node_id` da issue)
 
 ```http
 POST /github-projects/columns/{column_id}/cards
 
 {
   "token": "ghp_xxx",
-  "issue_id": 1
+  "issue_id": "abc123"
 }
 ```
 

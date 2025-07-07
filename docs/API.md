@@ -70,7 +70,7 @@ Cria uma milestone
 
 ## POST /github-projects
 
-Cria um projeto classic
+Cria um projeto via GraphQL
 
 ## GET /github-projects
 
@@ -78,7 +78,7 @@ Lista projetos do repositório
 
 ## POST /github-projects/{project_id}/columns
 
-Cria coluna em um projeto
+Cria coluna em um projeto via GraphQL
 
 ## GET /github-projects/{project_id}/columns
 
@@ -86,7 +86,7 @@ Lista colunas de um projeto
 
 ## POST /github-projects/columns/{column_id}/cards
 
-Adiciona issue ao projeto
+Adiciona issue ao projeto via GraphQL (use o `node_id` da issue)
 
 ## POST /github-pulls
 

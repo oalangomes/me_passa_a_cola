@@ -22,6 +22,8 @@ async function main() {
   const spec = await specRes.json();
   assert(spec.paths['/create-notion-content']);
   assert(spec.paths['/github-issues']);
+  assert(spec.paths['/github-projects']);
+  assert(spec.paths['/github-projects/columns/{column_id}/cards']);
   server.close();
 
   await testCloneRepoPull();
