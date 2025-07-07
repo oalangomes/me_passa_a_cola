@@ -402,6 +402,13 @@ commitWorkflow: deploy.yml
 githubToken: ghp_xxx
 githubOwner: usuario
 githubRepo: repositorio
+defaultIssueProject: proj1
+issueRules:
+  - if:
+      labels: ['bug']
+    set:
+      milestone: 'Sprint 1'
+      column: 'Bugs'
 ```
 
 Ou em JSON:
@@ -415,6 +422,8 @@ Ou em JSON:
   "githubRepo": "repositorio"
 }
 ```
+
+O campo `issueRules` permite automatizar passos após criar ou atualizar uma issue. Veja um exemplo de regra que define milestone e coluna quando a label `bug` estiver presente.
 
 Crie também o arquivo citado no campo `commitTemplate`. Esse documento será lido
 como base para a mensagem de commit. Caso não exista configuração, o caminho

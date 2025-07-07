@@ -45,6 +45,7 @@ const fs = require('fs');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const { loadColaConfig, loadCommitTemplate } = require('./utils/cola-config');
+const { applyIssueRules } = require('./utils/issue-rules');
 
 function loadSwaggerDocs() {
     const dir = path.join(__dirname, '..', 'gpt');
@@ -961,6 +962,7 @@ app.post('/github-issues', async (req, res) => {
                 console.warn('Falha ao adicionar issue ao projeto:', projErr.message);
             }
         }
+        await applyIssueRules(issue, { token, owner, repo, defaultIssueProject: config.defaultIssueProject, issueRules: config.issueRules });
         res.json({ ok: true, issue });
     } catch (err) {
         console.error(err);
@@ -969,12 +971,21 @@ app.post('/github-issues', async (req, res) => {
 });
 
 app.patch('/github-issues/:number', async (req, res) => {
-    const { token, owner, repo, milestone } = req.body;
+    const { token, owner, repo, milestone, repoUrl, credentials } = req.body;
     const { number } = req.params;
     if (!token || !owner || !repo) {
         return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
     }
     try {
+        let config = {};
+        if (repoUrl && credentials) {
+            try {
+                const repoPath = await cloneRepo(repoUrl, credentials);
+                config = loadColaConfig(repoPath);
+            } catch (confErr) {
+                console.warn('Falha ao carregar configuração:', confErr.message);
+            }
+        }
         let milestoneNumber = milestone;
         if (milestone && isNaN(Number(milestone))) {
             try {
@@ -986,6 +997,7 @@ app.patch('/github-issues/:number', async (req, res) => {
             }
         }
         const issue = await updateIssue({ token, owner, repo, issue_number: number, milestone: milestoneNumber, ...req.body });
+        await applyIssueRules(issue, { token, owner, repo, defaultIssueProject: config.defaultIssueProject, issueRules: config.issueRules });
         res.json({ ok: true, issue });
     } catch (err) {
         console.error(err);
