@@ -91,6 +91,12 @@ function loadTemplate(type, name = '') {
     }
 }
 
+function parseGitHubRepo(url) {
+    const match = url && url.match(/github\.com[:\/](.+?)\/(.+?)(?:\.git)?$/);
+    if (!match) return { owner: '', repo: '' };
+    return { owner: match[1], repo: match[2].replace(/\.git$/, '') };
+}
+
 // Endpoint principal
 app.post("/create-notion-content", async (req, res) => {
     try {
@@ -692,6 +698,21 @@ app.patch('/git-file', async (req, res) => {
 
         await commitAndPush(repoPath, finalMsg, [fullPath], branch);
 
+        const workflowId = config.commitWorkflow || config.workflow || config.workflow_id;
+        if (workflowId) {
+            const repoInfo = parseGitHubRepo(repoUrl);
+            const owner = req.body.githubOwner || config.githubOwner || repoInfo.owner;
+            const repo = req.body.githubRepo || config.githubRepo || repoInfo.repo;
+            const token = req.body.githubToken || config.githubToken;
+            if (token && owner && repo) {
+                try {
+                    await dispatchWorkflow({ token, owner, repo, workflow_id: workflowId, ref: branch });
+                } catch (wErr) {
+                    console.warn('Falha ao acionar workflow:', wErr.message);
+                }
+            }
+        }
+
         res.json({ ok: true });
     } catch (err) {
         console.error(err);
@@ -734,6 +755,21 @@ app.post('/git-commit', async (req, res) => {
 
         const pathsToAdd = files.map(f => path.join(repoPath, f));
         await commitAndPush(repoPath, finalMsg, pathsToAdd, branch);
+
+        const workflowId = config.commitWorkflow || config.workflow || config.workflow_id;
+        if (workflowId) {
+            const repoInfo = parseGitHubRepo(repoUrl);
+            const owner = req.body.githubOwner || config.githubOwner || repoInfo.owner;
+            const repo = req.body.githubRepo || config.githubRepo || repoInfo.repo;
+            const token = req.body.githubToken || config.githubToken;
+            if (token && owner && repo) {
+                try {
+                    await dispatchWorkflow({ token, owner, repo, workflow_id: workflowId, ref: branch });
+                } catch (wErr) {
+                    console.warn('Falha ao acionar workflow:', wErr.message);
+                }
+            }
+        }
 
         res.json({ ok: true });
     } catch (err) {
@@ -829,6 +865,21 @@ app.post('/create-notion-content-git', async (req, res) => {
         fs.writeFileSync(fullPath, resumo);
 
         await commitAndPush(repoPath, finalMsg, [fullPath], branch);
+
+        const workflowId = config.commitWorkflow || config.workflow || config.workflow_id;
+        if (workflowId) {
+            const repoInfo = parseGitHubRepo(repoUrl);
+            const owner = req.body.githubOwner || config.githubOwner || repoInfo.owner;
+            const repo = req.body.githubRepo || config.githubRepo || repoInfo.repo;
+            const token = req.body.githubToken || config.githubToken;
+            if (token && owner && repo) {
+                try {
+                    await dispatchWorkflow({ token, owner, repo, workflow_id: workflowId, ref: branch });
+                } catch (wErr) {
+                    console.warn('Falha ao acionar workflow:', wErr.message);
+                }
+            }
+        }
 
         res.json({
             ok: true,

@@ -333,10 +333,14 @@ Headers:
   "content": {
   "novo.txt": "conteudo gerado"
   }
+  "githubToken": "ghp_xxx",      # opcional para disparar workflow
+  "githubOwner": "usuario",      # opcional
+  "githubRepo": "repositorio"    # opcional
 }
 ```
 
 O campo `branch` é opcional e assume `main` como padrão. Os caminhos listados em `files` são relativos ao repositório. O objeto `content` permite criar arquivos fornecendo pares caminho/conteúdo. O acesso é protegido pelo cabeçalho `x-api-token`.
+Se o arquivo `.cola-config` contiver `commitWorkflow`, esse workflow será disparado após o commit usando as credenciais informadas.
 
 ## 🚀 Endpoint para Notion + Git
 
@@ -358,7 +362,10 @@ Headers:
   "notion_token": "secret_xxx",
   "tema": "Matéria X",
   "subtitulo": "Aula 1",
-  "resumo": "Conteúdo em Markdown"
+  "resumo": "Conteúdo em Markdown",
+  "githubToken": "ghp_xxx",      # opcional para disparar workflow
+  "githubOwner": "usuario",      # opcional
+  "githubRepo": "repositorio"    # opcional
 }
 ```
 
@@ -381,21 +388,31 @@ API_TOKEN=seu_token PORT=3333 npm start
 ### 📁 Arquivo de configuração `.cola-config`
 
 Dentro de qualquer repositório usado pelas rotas de Git é possível criar um arquivo
-`.cola-config.yml` ou `.cola-config.json` com ajustes extras. Atualmente o campo
-`commitTemplate` permite definir o caminho de um template de commit utilizado quando
-`commitMessage` não é informado.
+`.cola-config.yml` ou `.cola-config.json` com ajustes extras. O campo
+`commitTemplate` define o template da mensagem de commit quando `commitMessage`
+não é informado. Também é possível indicar o workflow a ser disparado após cada
+commit através de `commitWorkflow` (nome ou `workflow_id`). Caso o workflow
+necessite autenticação, informe `githubToken`, `githubOwner` e `githubRepo`.
 
 Exemplo em YAML:
 
 ```yaml
 commitTemplate: .github/commit-template.md
+commitWorkflow: deploy.yml
+githubToken: ghp_xxx
+githubOwner: usuario
+githubRepo: repositorio
 ```
 
 Ou em JSON:
 
 ```json
 {
-  "commitTemplate": ".github/commit-template.md"
+  "commitTemplate": ".github/commit-template.md",
+  "commitWorkflow": "deploy.yml",
+  "githubToken": "ghp_xxx",
+  "githubOwner": "usuario",
+  "githubRepo": "repositorio"
 }
 ```
 
