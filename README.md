@@ -620,12 +620,9 @@ Depois de iniciar o servidor, acesse `http://localhost:3333/doca/API.md` para vi
 
 ### Ações para GPT personalizado
 
-Os endpoints foram divididos em dois arquivos dentro de `gpt/`:
-
-- `actions-notion.json` – somente rotas relacionadas ao Notion;
-- `actions-github.json` – rotas de integrações com o GitHub.
-
-Ao criar seu GPT, envie um ou ambos os arquivos na etapa de **Actions** para habilitar as funcionalidades desejadas.
+Todos os endpoints estão definidos em um único arquivo, `gpt/actions.json`.
+Use esse arquivo na etapa de **Actions** ao criar seu GPT para habilitar
+as integrações disponíveis.
 
 ## 🔍 Validação automática do deploy
 
