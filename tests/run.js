@@ -12,6 +12,7 @@ async function main() {
   await testGithubProjectRoutes();
   await testGithubMilestoneRoutes();
   await testGithubIssueDefaults();
+  await testGithubIssueRules();
 }
 
 function startServer() {
@@ -253,6 +254,66 @@ async function testGithubIssueDefaults() {
   assert.strictEqual(res.status, 200);
   assert.strictEqual(createdIssueBody.milestone, 2);
   assert.strictEqual(projectColumnUsed, 'colX');
+
+  server.close();
+  global.fetch = originalFetch;
+}
+
+async function testGithubIssueRules() {
+  execSync('rm -rf /tmp/rules.git');
+  execSync('git init --bare /tmp/rules.git');
+
+  execSync('rm -rf /tmp/workrules');
+  execSync('git clone /tmp/rules.git /tmp/workrules');
+  fs.writeFileSync('/tmp/workrules/.cola-config.yml', 'defaultIssueProject: proj1\nissueRules:\n  - if:\n      labels: [bug]\n    set:\n      milestone: M1\n      column: Bugs\n');
+  execSync('cd /tmp/workrules && git add .cola-config.yml && git commit -m init && git push origin master');
+
+  const server = startServer();
+  const port = server.address().port;
+
+  let patchedMilestone = null;
+  let movedColumn = null;
+  const originalFetch = global.fetch;
+  global.fetch = async (url, options) => {
+    if (url.startsWith('https://api.github.com/repos/o/r/issues') && options.method === 'POST') {
+      return { ok: true, json: async () => ({ number: 1, node_id: 'n2', labels: [{ name: 'bug' }] }) };
+    }
+    if (url.startsWith('https://api.github.com/repos/o/r/issues/1') && options.method === 'PATCH') {
+      patchedMilestone = JSON.parse(options.body).milestone;
+      return { ok: true, json: async () => ({}) };
+    }
+    if (url.startsWith('https://api.github.com/repos/o/r/milestones')) {
+      return { ok: true, json: async () => ([{ number: 10, title: 'M1' }]) };
+    }
+    if (url === 'https://api.github.com/graphql') {
+      const { query, variables } = JSON.parse(options.body);
+      if (query.includes('addProjectCard')) {
+        movedColumn = variables.projectColumnId;
+        return { ok: true, json: async () => ({ data: { addProjectCard: { cardEdge: { node: { id: 'c2' } } } } }) };
+      }
+      if (query.includes('columns(')) {
+        return { ok: true, json: async () => ({ data: { node: { columns: { nodes: [{ id: 'colBug', name: 'Bugs' }] } } } }) };
+      }
+    }
+    return originalFetch(url, options);
+  };
+
+  const res = await fetch(`http://localhost:${port}/github-issues`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      token: 't',
+      owner: 'o',
+      repo: 'r',
+      title: 'Bug',
+      labels: ['bug'],
+      repoUrl: '/tmp/rules.git',
+      credentials: ''
+    })
+  });
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(patchedMilestone, 10);
+  assert.strictEqual(movedColumn, 'colBug');
 
   server.close();
   global.fetch = originalFetch;
