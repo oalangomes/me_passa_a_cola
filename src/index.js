@@ -37,7 +37,8 @@ const {
     addIssueToProject,
     createPullRequest,
     updatePullRequest,
-    closePullRequest
+    closePullRequest,
+    mergePullRequest
 } = require('./utils/github');
 const { updateIssueProject } = require('./utils/linear');
 const pdfParse = require('pdf-parse');
@@ -1176,6 +1177,68 @@ app.post('/github-pulls', async (req, res) => {
         const prBody = body || loadTemplate('pr');
         const pull = await createPullRequest({ token, owner, repo, title, head, base, body: prBody });
         res.json({ ok: true, pull });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/github-pulls/auto', async (req, res) => {
+    const {
+        token,
+        owner,
+        repo,
+        head,
+        base = 'main',
+        type = 'feature',
+        repoUrl,
+        credentials = '',
+        autoClose = false
+    } = req.body;
+    if (!token || !owner || !repo || !head || !repoUrl) {
+        return res.status(400).json({ error: 'token, owner, repo, head e repoUrl são obrigatórios' });
+    }
+    try {
+        const repoPath = await cloneRepo(repoUrl, credentials);
+        const config = loadColaConfig(repoPath);
+        let templates = {};
+        if (typeof config.pullRequestTemplates === 'string') {
+            try { templates = JSON.parse(config.pullRequestTemplates); } catch {}
+        } else if (typeof config.pullRequestTemplates === 'object') {
+            templates = config.pullRequestTemplates;
+        } else {
+            for (const k of Object.keys(config)) {
+                if (k.startsWith('pullRequestTemplates.')) {
+                    const t = k.split('.')[1];
+                    templates[t] = config[k];
+                }
+            }
+        }
+        let templatePath = templates[type];
+        let title = head;
+        let body = '';
+        if (templatePath) {
+            try {
+                const tpl = fs.readFileSync(path.join(repoPath, templatePath), 'utf8').trim();
+                const lines = tpl.split(/\r?\n/);
+                title = lines.shift().replace(/^#\s*/, '').trim() || head;
+                body = lines.join('\n');
+            } catch (err) {
+                console.warn('Falha ao carregar template:', err.message);
+            }
+        }
+        const pull = await createPullRequest({ token, owner, repo, title, head, base, body });
+        let merged = false;
+        try {
+            await mergePullRequest({ token, owner, repo, pull_number: pull.number });
+            merged = true;
+            if (autoClose) {
+                await closePullRequest({ token, owner, repo, pull_number: pull.number });
+            }
+        } catch (err) {
+            console.warn('Falha ao mesclar PR:', err.message);
+        }
+        res.json({ ok: true, pull, merged });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });

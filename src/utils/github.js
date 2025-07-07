@@ -143,6 +143,12 @@ async function closePullRequest(params) {
     return updatePullRequest({ ...params, state: 'closed' });
 }
 
+async function mergePullRequest({ token, owner, repo, pull_number, method = 'merge' }) {
+    return githubRequest(token, 'PUT', `/repos/${owner}/${repo}/pulls/${pull_number}/merge`, {
+        merge_method: method
+    });
+}
+
 module.exports = {
     createIssue,
     updateIssue,
@@ -162,5 +168,6 @@ module.exports = {
     createPullRequest,
     updatePullRequest,
     closePullRequest,
+    mergePullRequest,
     githubGraphqlRequest
 };

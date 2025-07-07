@@ -13,11 +13,16 @@ githubRepo: repositorio
 defaultIssueMilestone: 1
 defaultIssueProject: proj1
 defaultIssueColumn: col1
+pullRequestTemplates.feature: .github/pr-feature.md
+pullRequestTemplates.fix: .github/pr-fix.md
+pullRequestTemplates.chore: .github/pr-chore.md
 ```
 
 As mesmas opções podem ser definidas em JSON.
 
 Os campos `defaultIssueMilestone`, `defaultIssueProject` e `defaultIssueColumn` definem valores padrão para a rota `/github-issues` quando `milestone` ou `column_id` não são enviados na requisição.
+
+Use `pullRequestTemplates` para apontar arquivos de template por tipo de PR. O título será a primeira linha do arquivo e o restante compõe o corpo do pull request.
 
 Também é possível definir `issueRules` para aplicar ações automáticas em issues recém criadas ou atualizadas. Exemplo:
 

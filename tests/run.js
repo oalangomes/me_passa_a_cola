@@ -13,6 +13,7 @@ async function main() {
   await testGithubMilestoneRoutes();
   await testGithubIssueDefaults();
   await testGithubIssueRules();
+  await testGithubPullAuto();
 }
 
 function startServer() {
@@ -156,6 +157,61 @@ async function testGithubProjectRoutes() {
   assert.strictEqual(cardRes.status, 200);
   const cardData = await cardRes.json();
   assert(cardData.card);
+
+  server.close();
+  global.fetch = originalFetch;
+}
+
+async function testGithubPullAuto() {
+  execSync('rm -rf /tmp/pr.git');
+  execSync('git init --bare /tmp/pr.git');
+
+  execSync('rm -rf /tmp/workpr');
+  execSync('git clone /tmp/pr.git /tmp/workpr');
+  fs.writeFileSync('/tmp/workpr/.cola-config.json', JSON.stringify({ pullRequestTemplates: { feature: 'pr-feature.md' } }));
+  fs.writeFileSync('/tmp/workpr/pr-feature.md', '# Titulo\nCorpo');
+  execSync('cd /tmp/workpr && git add . && git commit -m init && git push origin master');
+
+  const server = startServer();
+  const port = server.address().port;
+
+  let createCalled = false;
+  let mergeCalled = false;
+  let closeCalled = false;
+  const originalFetch = global.fetch;
+  global.fetch = async (url, options) => {
+    if (url === 'https://api.github.com/repos/o/r/pulls' && options.method === 'POST') {
+      createCalled = true;
+      return { ok: true, json: async () => ({ number: 9 }) };
+    }
+    if (url === 'https://api.github.com/repos/o/r/pulls/9/merge' && options.method === 'PUT') {
+      mergeCalled = true;
+      return { ok: true, json: async () => ({ merged: true }) };
+    }
+    if (url.startsWith('https://api.github.com/repos/o/r/pulls/9') && options.method === 'PATCH') {
+      closeCalled = true;
+      return { ok: true, json: async () => ({}) };
+    }
+    return originalFetch(url, options);
+  };
+
+  const res = await fetch(`http://localhost:${port}/github-pulls/auto`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      token: 't',
+      owner: 'o',
+      repo: 'r',
+      head: 'feat',
+      base: 'main',
+      repoUrl: '/tmp/pr.git',
+      credentials: '',
+      type: 'feature',
+      autoClose: true
+    })
+  });
+  assert.strictEqual(res.status, 200);
+  assert(createCalled && mergeCalled && closeCalled);
 
   server.close();
   global.fetch = originalFetch;

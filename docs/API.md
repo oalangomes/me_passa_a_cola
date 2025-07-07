@@ -106,6 +106,10 @@ Adiciona issue ao projeto via GraphQL (use o `node_id` da issue)
 
 Cria um pull request
 
+## POST /github-pulls/auto
+
+Cria e mescla automaticamente um pull request a partir de um template definido em `.cola-config`. Envie `autoClose: true` para fechar o PR após o merge.
+
 ## PATCH /github-pulls/{number}
 
 Atualiza um pull request

@@ -636,6 +636,24 @@ POST /github-pulls
 }
 ```
 
+### Criar e Mesclar Pull Request automaticamente
+
+```http
+POST /github-pulls/auto
+
+{
+  "token": "ghp_xxx",
+  "owner": "usuario",
+  "repo": "repositorio",
+  "head": "feature-branch",
+  "base": "main",
+  "repoUrl": "https://github.com/usuario/repositorio.git",
+  "credentials": "usuario:token",
+  "type": "feature",
+  "autoClose": true
+}
+```
+
 ### Atualizar/Fechar Pull Request
 
 ```http
