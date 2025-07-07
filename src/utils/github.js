@@ -11,11 +11,15 @@ async function githubGraphqlRequest(token, query, variables = {}) {
         },
         body: JSON.stringify({ query, variables })
     });
+    const data = await res.json();
     if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`GitHub GraphQL ${res.status}: ${text}`);
+        throw new Error(`GitHub GraphQL ${res.status}: ${JSON.stringify(data)}`);
     }
-    return await res.json();
+    if (data.errors) {
+        const msg = data.errors.map(e => e.message).join('; ');
+        throw new Error(msg);
+    }
+    return data;
 }
 
 async function githubRequest(token, method, url, body, extraHeaders = {}) {
