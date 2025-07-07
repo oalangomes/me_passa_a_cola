@@ -18,7 +18,7 @@ const {
     getOrCreatePage,
     sleep
 } = require('./utils/notion');
-const { cloneRepo, commitAndPush, listRepoFiles } = require('./utils/git');
+const { cloneRepo, commitAndPush, listRepoFiles, readRepoFile } = require('./utils/git');
 const {
     createIssue,
     updateIssue,
@@ -632,6 +632,27 @@ app.get('/git-files', async (req, res) => {
         const repoPath = await cloneRepo(repoUrl, credentials);
         const files = await listRepoFiles(repoPath, dir);
         res.json({ ok: true, files });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/git-file', async (req, res) => {
+    if (req.header('x-api-token') !== API_TOKEN) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { repoUrl, credentials, file } = req.query;
+
+    if (!repoUrl || !credentials || !file) {
+        return res.status(400).json({ error: 'repoUrl, credentials e file são obrigatórios' });
+    }
+
+    try {
+        const repoPath = await cloneRepo(repoUrl, credentials);
+        const content = await readRepoFile(repoPath, file);
+        res.json({ ok: true, content });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
