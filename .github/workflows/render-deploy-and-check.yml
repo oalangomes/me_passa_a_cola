@@ -1,0 +1,40 @@
+name: Deploy via Render CLI e Verificação
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      serviceID:
+        type: string
+        default: srv-d0sejoc9c44c73f3u6d0
+        description: 'Render Service ID para deploy'
+
+jobs:
+  deploy-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Instalar Render CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/render-oss/cli/refs/heads/main/bin/install.sh | sh
+
+      - name: Acionar deploy no Render
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          CI: true
+        run: |
+          render deploys create ${{ inputs.serviceID }} --output json --confirm
+
+      - name: Aguardar estabilização (60s)
+        run: sleep 60
+
+      - name: Verificar status da aplicação
+        run: |
+          status=$(curl -s -o /dev/null -w "%{http_code}" https://me-passa-a-cola.onrender.com/api-docs)
+          if [ "$status" != "200" ]; then
+            echo "Aplicação não respondeu corretamente. Status HTTP: $status"
+            exit 1
+          else
+            echo "Deploy concluído com sucesso. Aplicação respondeu com HTTP 200."
+          fi
