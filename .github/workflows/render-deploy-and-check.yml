@@ -10,7 +10,8 @@ jobs:
     steps:
       - name: Aguardar estabilização (60s)
         run: sleep 60
-        - uses: actions/checkout@v3
+
+      - uses: actions/checkout@v3
 
       - uses: actions/setup-node@v3
         with:
@@ -20,6 +21,3 @@ jobs:
         run: |
           npm ci
           node scripts/check-deploy.js
-
-
-
