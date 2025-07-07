@@ -93,7 +93,8 @@ Adiciona issue ao projeto via GraphQL (use o `node_id` da issue)
 
 ## POST /github-pulls
 
-Cria um pull request
+Cria um pull request. Aceita os campos opcionais `template` (feature, fix, chore)
+e `auto_delete_branch` para habilitar remoção automática do branch após o merge.
 
 ## PATCH /github-pulls/{number}
 

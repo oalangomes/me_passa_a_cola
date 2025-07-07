@@ -552,8 +552,10 @@ POST /github-pulls
   "owner": "usuario",
   "repo": "repositorio",
   "title": "Minha feature",
-  "head": "feature-branch",
-  "base": "main"
+  "head": "feature/minha-feature",
+  "base": "main",
+  "template": "feature",
+  "auto_delete_branch": true
 }
 ```
 
@@ -642,6 +644,12 @@ node scripts/check-deploy.js [URL]
 
 Se nenhum URL for informado, ele verifica `https://me-passa-a-cola.onrender.com/health`.
 O script retorna código diferente de zero caso a URL não responda com `200`.
+
+## 🚀 Abertura automática de Pull Requests
+
+Pushes para branches que começam com `feature/`, `fix/` ou `chore/` disparam o workflow
+`.github/workflows/auto-pr.yml`. Esse fluxo executa `scripts/auto-pr.js`, que cria
+um PR usando o template correspondente e ativa a remoção automática do branch após o merge.
 
 ---
 

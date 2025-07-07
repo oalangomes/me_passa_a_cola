@@ -35,13 +35,15 @@ const {
     addIssueToProject,
     createPullRequest,
     updatePullRequest,
-    closePullRequest
+    closePullRequest,
+    updateRepo
 } = require('./utils/github');
 const { updateIssueProject } = require('./utils/linear');
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
+const { loadTemplate } = require('./utils/templates');
 
 function loadSwaggerDocs() {
     const dir = path.join(__dirname, '..', 'gpt');
@@ -79,16 +81,6 @@ app.get('/health', (req, res) => {
 // Documentação estática gerada com Doca
 app.use('/doca', express.static(path.join(__dirname, '..', 'docs')));
 
-function loadTemplate(type, name = '') {
-    try {
-        const file = type === 'issue'
-            ? path.join(__dirname, '..', '.github', 'ISSUE_TEMPLATE', `${name}.md`)
-            : path.join(__dirname, '..', '.github', 'PULL_REQUEST_TEMPLATE.md');
-        return fs.readFileSync(file, 'utf8');
-    } catch (err) {
-        return '';
-    }
-}
 
 // Endpoint principal
 app.post("/create-notion-content", async (req, res) => {
@@ -932,13 +924,16 @@ app.get('/github-projects/:project_id/columns', async (req, res) => {
 });
 
 app.post('/github-pulls', async (req, res) => {
-    const { token, owner, repo, title, head, base, body = '' } = req.body;
+    const { token, owner, repo, title, head, base, body = '', template = '', auto_delete_branch = false } = req.body;
     if (!token || !owner || !repo || !title || !head || !base) {
         return res.status(400).json({ error: 'token, owner, repo, title, head e base são obrigatórios' });
     }
     try {
-        const prBody = body || loadTemplate('pr');
+        const prBody = body || loadTemplate('pr', template);
         const pull = await createPullRequest({ token, owner, repo, title, head, base, body: prBody });
+        if (auto_delete_branch) {
+            await updateRepo({ token, owner, repo, delete_branch_on_merge: true });
+        }
         res.json({ ok: true, pull });
     } catch (err) {
         console.error(err);

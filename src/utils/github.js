@@ -126,6 +126,16 @@ async function createPullRequest({ token, owner, repo, title, head, base, body =
     return githubRequest(token, 'POST', `/repos/${owner}/${repo}/pulls`, { title, head, base, body });
 }
 
+async function listPullRequests({ token, owner, repo, state = 'open', head }) {
+    const searchParams = new URLSearchParams({ state });
+    if (head) searchParams.append('head', head);
+    return githubRequest(token, 'GET', `/repos/${owner}/${repo}/pulls?${searchParams.toString()}`);
+}
+
+async function updateRepo({ token, owner, repo, ...settings }) {
+    return githubRequest(token, 'PATCH', `/repos/${owner}/${repo}`, settings);
+}
+
 async function updatePullRequest({ token, owner, repo, pull_number, title, body, state }) {
     return githubRequest(token, 'PATCH', `/repos/${owner}/${repo}/pulls/${pull_number}`, { title, body, state });
 }
@@ -149,7 +159,9 @@ module.exports = {
     listProjectColumns,
     addIssueToProject,
     createPullRequest,
+    listPullRequests,
     updatePullRequest,
     closePullRequest,
+    updateRepo,
     githubGraphqlRequest
 };
