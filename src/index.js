@@ -28,6 +28,8 @@ const {
     getWorkflowRun,
     createLabel,
     createMilestone,
+    listMilestones,
+    updateMilestone,
     createProject,
     createProjectColumn,
     listProjects,
@@ -895,13 +897,23 @@ app.post('/create-notion-content-git', async (req, res) => {
 
 // ----- GitHub Issues -----
 app.post('/github-issues', async (req, res) => {
-    const { token, owner, repo, title, body = '', labels = [], assignees = [], template, column_id } = req.body;
+    const { token, owner, repo, title, body = '', labels = [], assignees = [], milestone, template, column_id } = req.body;
     if (!token || !owner || !repo || !title) {
         return res.status(400).json({ error: 'token, owner, repo e title são obrigatórios' });
     }
     try {
         const issueBody = body || (template ? loadTemplate('issue', template) : '');
-        const issue = await createIssue({ token, owner, repo, title, body: issueBody, labels, assignees });
+        let milestoneNumber = milestone;
+        if (milestone && isNaN(Number(milestone))) {
+            try {
+                const ms = await listMilestones({ token, owner, repo, state: 'all' });
+                const found = ms.find(m => m.title === milestone);
+                if (found) milestoneNumber = found.number;
+            } catch (err) {
+                console.warn('Falha ao buscar milestone:', err.message);
+            }
+        }
+        const issue = await createIssue({ token, owner, repo, title, body: issueBody, labels, assignees, milestone: milestoneNumber });
         let finalColumnId = column_id;
         if (!finalColumnId) {
             try {
@@ -929,13 +941,23 @@ app.post('/github-issues', async (req, res) => {
 });
 
 app.patch('/github-issues/:number', async (req, res) => {
-    const { token, owner, repo } = req.body;
+    const { token, owner, repo, milestone } = req.body;
     const { number } = req.params;
     if (!token || !owner || !repo) {
         return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
     }
     try {
-        const issue = await updateIssue({ token, owner, repo, issue_number: number, ...req.body });
+        let milestoneNumber = milestone;
+        if (milestone && isNaN(Number(milestone))) {
+            try {
+                const ms = await listMilestones({ token, owner, repo, state: 'all' });
+                const found = ms.find(m => m.title === milestone);
+                if (found) milestoneNumber = found.number;
+            } catch (err) {
+                console.warn('Falha ao buscar milestone:', err.message);
+            }
+        }
+        const issue = await updateIssue({ token, owner, repo, issue_number: number, milestone: milestoneNumber, ...req.body });
         res.json({ ok: true, issue });
     } catch (err) {
         console.error(err);
@@ -993,6 +1015,35 @@ app.post('/github-milestones', async (req, res) => {
     }
     try {
         const milestone = await createMilestone({ token, owner, repo, title, state, description, due_on });
+        res.json({ ok: true, milestone });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/github-milestones', async (req, res) => {
+    const { token, owner, repo, state = 'open' } = req.query;
+    if (!token || !owner || !repo) {
+        return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
+    }
+    try {
+        const milestones = await listMilestones({ token, owner, repo, state });
+        res.json({ ok: true, milestones });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.patch('/github-milestones/:number', async (req, res) => {
+    const { token, owner, repo } = req.body;
+    const { number } = req.params;
+    if (!token || !owner || !repo) {
+        return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
+    }
+    try {
+        const milestone = await updateMilestone({ token, owner, repo, milestone_number: number, ...req.body });
         res.json({ ok: true, milestone });
     } catch (err) {
         console.error(err);

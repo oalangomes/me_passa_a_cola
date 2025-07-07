@@ -478,10 +478,12 @@ POST /github-issues
   "body": "Descrição opcional",
   "labels": ["bug"],
   "assignees": ["usuario"],
-  "column_id": 123456
+  "column_id": 123456,
+  "milestone": "Sprint 1"
 }
 ```
 O campo `column_id` é opcional. Se não informado, a API tenta utilizar a primeira coluna do primeiro projeto encontrado no repositório.
+O campo `milestone` aceita o número ou o título da milestone.
 
 
 ### Atualizar Issue
@@ -494,7 +496,8 @@ PATCH /github-issues/{numero}
   "owner": "usuario",
   "repo": "repositorio",
   "title": "Novo título",
-  "state": "open"
+  "state": "open",
+  "milestone": 1
 }
 ```
 
@@ -540,6 +543,25 @@ POST /github-milestones
   "owner": "usuario",
   "repo": "repositorio",
   "title": "Sprint 1"
+}
+```
+
+### Listar Milestones
+
+```http
+GET /github-milestones?token=ghp_xxx&owner=usuario&repo=repositorio&state=open
+```
+
+### Atualizar Milestone
+
+```http
+PATCH /github-milestones/{numero}
+
+{
+  "token": "ghp_xxx",
+  "owner": "usuario",
+  "repo": "repositorio",
+  "title": "Sprint 1 - Ajuste"
 }
 ```
 
