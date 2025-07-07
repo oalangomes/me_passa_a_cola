@@ -18,3 +18,16 @@ defaultIssueColumn: col1
 As mesmas opções podem ser definidas em JSON.
 
 Os campos `defaultIssueMilestone`, `defaultIssueProject` e `defaultIssueColumn` definem valores padrão para a rota `/github-issues` quando `milestone` ou `column_id` não são enviados na requisição.
+
+Também é possível definir `issueRules` para aplicar ações automáticas em issues recém criadas ou atualizadas. Exemplo:
+
+```yaml
+issueRules:
+  - if:
+      labels: ['bug']
+    set:
+      milestone: 'Sprint 1'
+      column: 'Bugs'
+```
+
+Se a issue possuir a label **bug**, ela será movida para a coluna indicada e terá a milestone atribuída automaticamente.
