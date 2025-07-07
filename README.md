@@ -634,6 +634,14 @@ fazer uma requisição para `https://me-passa-a-cola.onrender.com/api-docs`. Se 
 resposta não for `200`, o workflow falha e sinaliza um problema no ambiente de
 produção.
 
+Para testar manualmente, rode:
+
+```bash
+node scripts/check-deploy.js [URL]
+```
+
+O script retorna código diferente de zero caso a URL não responda com `200`.
+
 ---
 
 ## ⚖️ Política de uso e privacidade
