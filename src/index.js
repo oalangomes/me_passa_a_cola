@@ -767,7 +767,7 @@ app.post('/github-issues', async (req, res) => {
         }
         if (finalColumnId) {
             try {
-                await addIssueToProject({ token, column_id: finalColumnId, issue_id: issue.id });
+                await addIssueToProject({ token, column_id: finalColumnId, issue_id: issue.node_id });
             } catch (projErr) {
                 console.warn('Falha ao adicionar issue ao projeto:', projErr.message);
             }

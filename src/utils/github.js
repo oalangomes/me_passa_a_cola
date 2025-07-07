@@ -1,4 +1,22 @@
 const API_URL = 'https://api.github.com';
+const GRAPHQL_URL = 'https://api.github.com/graphql';
+
+async function githubGraphqlRequest(token, query, variables = {}) {
+    const res = await fetch(GRAPHQL_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'User-Agent': 'me-passa-a-cola'
+        },
+        body: JSON.stringify({ query, variables })
+    });
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`GitHub GraphQL ${res.status}: ${text}`);
+    }
+    return await res.json();
+}
 
 async function githubRequest(token, method, url, body, extraHeaders = {}) {
     const headers = {
@@ -62,23 +80,36 @@ async function createMilestone({ token, owner, repo, title, state = 'open', desc
 }
 
 async function createProject({ token, owner, repo, name, body = '' }) {
-    return githubRequest(token, 'POST', `/repos/${owner}/${repo}/projects`, { name, body }, { 'Accept': 'application/vnd.github.inertia-preview+json' });
+    const repoQuery = `query ($owner: String!, $name: String!) { repository(owner: $owner, name: $name) { id } }`;
+    const repoRes = await githubGraphqlRequest(token, repoQuery, { owner, name: repo });
+    const repositoryId = repoRes.data.repository.id;
+    const mutation = `mutation ($repositoryId: ID!, $name: String!, $body: String!) {\n  createProject(input: {repositoryId: $repositoryId, name: $name, body: $body}) {\n    project { id name body }\n  }\n}`;
+    const result = await githubGraphqlRequest(token, mutation, { repositoryId, name, body });
+    return result.data.createProject.project;
 }
 
 async function createProjectColumn({ token, project_id, name }) {
-    return githubRequest(token, 'POST', `/projects/${project_id}/columns`, { name }, { 'Accept': 'application/vnd.github.inertia-preview+json' });
+    const mutation = `mutation ($projectId: ID!, $name: String!) {\n  addProjectColumn(input: {projectId: $projectId, name: $name}) {\n    columnEdge { node { id name } }\n  }\n}`;
+    const result = await githubGraphqlRequest(token, mutation, { projectId: project_id, name });
+    return result.data.addProjectColumn.columnEdge.node;
 }
 
 async function listProjects({ token, owner, repo }) {
-    return githubRequest(token, 'GET', `/repos/${owner}/${repo}/projects`, null, { 'Accept': 'application/vnd.github.inertia-preview+json' });
+    const query = `query ($owner: String!, $name: String!) {\n  repository(owner: $owner, name: $name) {\n    projects(first: 100) { nodes { id name body } }\n  }\n}`;
+    const result = await githubGraphqlRequest(token, query, { owner, name: repo });
+    return result.data.repository.projects.nodes;
 }
 
 async function listProjectColumns({ token, project_id }) {
-    return githubRequest(token, 'GET', `/projects/${project_id}/columns`, null, { 'Accept': 'application/vnd.github.inertia-preview+json' });
+    const query = `query ($projectId: ID!) {\n  node(id: $projectId) {\n    ... on Project {\n      columns(first: 100) { nodes { id name } }\n    }\n  }\n}`;
+    const result = await githubGraphqlRequest(token, query, { projectId: project_id });
+    return result.data.node.columns.nodes;
 }
 
 async function addIssueToProject({ token, column_id, issue_id }) {
-    return githubRequest(token, 'POST', `/projects/columns/${column_id}/cards`, { content_id: issue_id, content_type: 'Issue' }, { 'Accept': 'application/vnd.github.inertia-preview+json' });
+    const mutation = `mutation ($projectColumnId: ID!, $contentId: ID!) {\n  addProjectCard(input: {projectColumnId: $projectColumnId, contentId: $contentId}) {\n    cardEdge { node { id } }\n  }\n}`;
+    const result = await githubGraphqlRequest(token, mutation, { projectColumnId: column_id, contentId: issue_id });
+    return result.data.addProjectCard.cardEdge.node;
 }
 
 async function createPullRequest({ token, owner, repo, title, head, base, body = '' }) {
@@ -109,5 +140,6 @@ module.exports = {
     addIssueToProject,
     createPullRequest,
     updatePullRequest,
-    closePullRequest
+    closePullRequest,
+    githubGraphqlRequest
 };

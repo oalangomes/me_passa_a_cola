@@ -260,7 +260,7 @@
     "/github-projects": {
       "post": {
         "operationId": "criarProjeto",
-        "description": "Cria um projeto classic",
+        "description": "Cria um projeto via GraphQL",
         "requestBody": {
           "required": true,
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubProjectCreate" } } }
@@ -281,7 +281,7 @@
     "/github-projects/{project_id}/columns": {
       "post": {
         "operationId": "criarColunaProjeto",
-        "description": "Cria coluna em um projeto",
+        "description": "Cria coluna em um projeto via GraphQL",
         "requestBody": {
           "required": true,
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubProjectColumnCreate" } } }
@@ -301,7 +301,7 @@
     "/github-projects/columns/{column_id}/cards": {
       "post": {
         "operationId": "adicionarIssueProjeto",
-        "description": "Adiciona issue ao projeto",
+        "description": "Adiciona issue ao projeto via GraphQL",
         "requestBody": {
           "required": true,
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubProjectCardCreate" } } }
@@ -707,7 +707,7 @@
           "properties": {
             "token": { "type": "string" },
             "column_id": { "type": "string" },
-            "issue_id": { "type": "integer" }
+            "issue_id": { "type": "string" }
           },
           "required": ["token", "column_id", "issue_id"]
         },
