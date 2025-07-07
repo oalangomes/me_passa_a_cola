@@ -326,7 +326,11 @@
         "description": "Atualiza um pull request",
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubPullUpdate" } } }
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/GithubPullUpdate" }
+            }
+          }
         },
         "responses": { "200": { "description": "Sucesso" } }
       },
@@ -335,7 +339,26 @@
         "description": "Fecha um pull request",
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubPullDelete" } } }
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/GithubPullDelete" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
+    "/linear-issues/project": {
+      "post": {
+        "operationId": "atualizarProjetoIssueLinear",
+        "description": "Atualiza o projeto de uma issue no Linear",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LinearIssueProjectUpdate" }
+            }
+          }
         },
         "responses": { "200": { "description": "Sucesso" } }
       }
@@ -721,6 +744,15 @@
             "repo": { "type": "string" }
           },
           "required": ["token", "owner", "repo"]
+        },
+        "LinearIssueProjectUpdate": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "issue_id": { "type": "string" },
+            "project_id": { "type": "string" }
+          },
+          "required": ["token", "issue_id", "project_id"]
         }
       }
     }
