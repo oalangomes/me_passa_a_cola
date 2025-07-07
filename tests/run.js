@@ -6,7 +6,18 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 async function main() {
+  await testBasicEndpoints();
+  await testCloneRepoPull();
+  await testGithubProjectRoutes();
+}
+
+function startServer() {
   const server = app.listen(0);
+  return server;
+}
+
+async function testBasicEndpoints() {
+  const server = startServer();
   const port = server.address().port;
 
   const res = await fetch(`http://localhost:${port}/pdf-to-notion`, {
@@ -25,8 +36,6 @@ async function main() {
   assert(spec.paths['/github-projects']);
   assert(spec.paths['/github-projects/columns/{column_id}/cards']);
   server.close();
-
-  await testCloneRepoPull();
 }
 
 async function testCloneRepoPull() {
@@ -49,6 +58,81 @@ async function testCloneRepoPull() {
   const repoPath2 = await cloneRepo('/tmp/origin.git');
   const content = fs.readFileSync(path.join(repoPath2, 'file.txt'), 'utf8');
   assert.strictEqual(content.trim(), 'v2');
+}
+
+async function testGithubProjectRoutes() {
+  const server = startServer();
+  const port = server.address().port;
+
+  const originalFetch = global.fetch;
+  global.fetch = async (url, options) => {
+    if (url === 'https://api.github.com/graphql') {
+      const { query, variables } = JSON.parse(options.body);
+      if (query.includes('repository(')) {
+        return {
+          ok: true,
+          json: async () => ({ data: { repository: { id: 'repo1' } } })
+        };
+      }
+      if (query.includes('createProject')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: { createProject: { project: { id: 'proj1', name: variables.name, body: variables.body } } }
+          })
+        };
+      }
+      if (query.includes('addProjectColumn')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: { addProjectColumn: { columnEdge: { node: { id: 'col1', name: variables.name } } } }
+          })
+        };
+      }
+      if (query.includes('addProjectCard')) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: { addProjectCard: { cardEdge: { node: { id: 'card1' } } } }
+          })
+        };
+      }
+    }
+    return originalFetch(url, options);
+  };
+
+  const projectRes = await fetch(`http://localhost:${port}/github-projects`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: 't', owner: 'o', repo: 'r', name: 'Test', body: '' })
+  });
+  assert.strictEqual(projectRes.status, 200);
+  const projectData = await projectRes.json();
+  assert(projectData.project);
+  const projectId = projectData.project.id;
+
+  const columnRes = await fetch(`http://localhost:${port}/github-projects/${projectId}/columns`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: 't', name: 'Col' })
+  });
+  assert.strictEqual(columnRes.status, 200);
+  const columnData = await columnRes.json();
+  assert(columnData.column);
+  const columnId = columnData.column.id;
+
+  const cardRes = await fetch(`http://localhost:${port}/github-projects/columns/${columnId}/cards`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: 't', issue_id: 'issue1' })
+  });
+  assert.strictEqual(cardRes.status, 200);
+  const cardData = await cardRes.json();
+  assert(cardData.card);
+
+  server.close();
+  global.fetch = originalFetch;
 }
 
 main().catch(err => {
