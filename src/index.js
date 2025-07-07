@@ -897,29 +897,57 @@ app.post('/create-notion-content-git', async (req, res) => {
 
 // ----- GitHub Issues -----
 app.post('/github-issues', async (req, res) => {
-    const { token, owner, repo, title, body = '', labels = [], assignees = [], milestone, template, column_id } = req.body;
+    const {
+        token,
+        owner,
+        repo,
+        title,
+        body = '',
+        labels = [],
+        assignees = [],
+        milestone,
+        template,
+        column_id,
+        repoUrl,
+        credentials
+    } = req.body;
     if (!token || !owner || !repo || !title) {
         return res.status(400).json({ error: 'token, owner, repo e title são obrigatórios' });
     }
     try {
+        let config = {};
+        if (repoUrl && credentials) {
+            try {
+                const repoPath = await cloneRepo(repoUrl, credentials);
+                config = loadColaConfig(repoPath);
+            } catch (confErr) {
+                console.warn('Falha ao carregar configuração:', confErr.message);
+            }
+        }
+
         const issueBody = body || (template ? loadTemplate('issue', template) : '');
-        let milestoneNumber = milestone;
-        if (milestone && isNaN(Number(milestone))) {
+        let milestoneValue = milestone || config.defaultIssueMilestone;
+        let milestoneNumber = milestoneValue;
+        if (milestoneValue && isNaN(Number(milestoneValue))) {
             try {
                 const ms = await listMilestones({ token, owner, repo, state: 'all' });
-                const found = ms.find(m => m.title === milestone);
+                const found = ms.find(m => m.title === milestoneValue);
                 if (found) milestoneNumber = found.number;
             } catch (err) {
                 console.warn('Falha ao buscar milestone:', err.message);
             }
         }
         const issue = await createIssue({ token, owner, repo, title, body: issueBody, labels, assignees, milestone: milestoneNumber });
-        let finalColumnId = column_id;
+        let finalColumnId = column_id || config.defaultIssueColumn;
         if (!finalColumnId) {
             try {
-                const projects = await listProjects({ token, owner, repo });
-                if (projects.length > 0) {
-                    const cols = await listProjectColumns({ token, project_id: projects[0].id });
+                let projectId = config.defaultIssueProject;
+                if (!projectId) {
+                    const projects = await listProjects({ token, owner, repo });
+                    if (projects.length > 0) projectId = projects[0].id;
+                }
+                if (projectId) {
+                    const cols = await listProjectColumns({ token, project_id: projectId });
                     if (cols.length > 0) finalColumnId = cols[0].id;
                 }
             } catch (projErr) {

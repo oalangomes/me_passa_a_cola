@@ -11,6 +11,7 @@ async function main() {
   await testGitFileRoute();
   await testGithubProjectRoutes();
   await testGithubMilestoneRoutes();
+  await testGithubIssueDefaults();
 }
 
 function startServer() {
@@ -202,6 +203,56 @@ async function testGithubMilestoneRoutes() {
   assert.strictEqual(listRes.status, 200);
   const listData = await listRes.json();
   assert(Array.isArray(listData.milestones));
+
+  server.close();
+  global.fetch = originalFetch;
+}
+
+async function testGithubIssueDefaults() {
+  execSync('rm -rf /tmp/default.git');
+  execSync('git init --bare /tmp/default.git');
+
+  execSync('rm -rf /tmp/workdef');
+  execSync('git clone /tmp/default.git /tmp/workdef');
+  fs.writeFileSync('/tmp/workdef/.cola-config.yml', 'defaultIssueMilestone: 2\ndefaultIssueColumn: colX');
+  execSync('cd /tmp/workdef && git add .cola-config.yml && git commit -m init && git push origin master');
+
+  const server = startServer();
+  const port = server.address().port;
+
+  let createdIssueBody = null;
+  let projectColumnUsed = null;
+  const originalFetch = global.fetch;
+  global.fetch = async (url, options) => {
+    if (url.startsWith('https://api.github.com/repos/o/r/issues')) {
+      createdIssueBody = JSON.parse(options.body);
+      return { ok: true, json: async () => ({ node_id: 'iss1' }) };
+    }
+    if (url === 'https://api.github.com/graphql') {
+      const { query, variables } = JSON.parse(options.body);
+      if (query.includes('addProjectCard')) {
+        projectColumnUsed = variables.projectColumnId;
+        return { ok: true, json: async () => ({ data: { addProjectCard: { cardEdge: { node: { id: 'c1' } } } } }) };
+      }
+    }
+    return originalFetch(url, options);
+  };
+
+  const res = await fetch(`http://localhost:${port}/github-issues`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      token: 't',
+      owner: 'o',
+      repo: 'r',
+      title: 'Def',
+      repoUrl: '/tmp/default.git',
+      credentials: ''
+    })
+  });
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(createdIssueBody.milestone, 2);
+  assert.strictEqual(projectColumnUsed, 'colX');
 
   server.close();
   global.fetch = originalFetch;
