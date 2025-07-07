@@ -72,6 +72,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.get('/api-docs.json', (req, res) => {
     res.json(swaggerDocument);
 });
+// Health check simples para validacao de deploy
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok' });
+});
 // Documentação estática gerada com Doca
 app.use('/doca', express.static(path.join(__dirname, '..', 'docs')));
 

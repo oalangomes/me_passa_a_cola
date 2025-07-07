@@ -23,4 +23,4 @@ jobs:
       - name: Instalar dependências e verificar deploy
         run: |
           npm ci
-          node scripts/check-deploy.js
+          node scripts/check-deploy.js https://me-passa-a-cola.onrender.com/health

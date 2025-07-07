@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const url = process.argv[2] || 'https://me-passa-a-cola.onrender.com/api-docs';
+const url = process.argv[2] || 'https://me-passa-a-cola.onrender.com/health';
 
 async function main() {
   try {

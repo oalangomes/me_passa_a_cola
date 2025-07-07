@@ -630,7 +630,7 @@ as integrações disponíveis.
 O repositório conta com um workflow do **GitHub Actions** que monitora se o
 deploy no Render está ativo. O arquivo
 `.github/workflows/render-deploy-and-check.yml` espera 45&nbsp;segundos antes de
-fazer uma requisição para `https://me-passa-a-cola.onrender.com/api-docs`. Se a
+fazer uma requisição para `https://me-passa-a-cola.onrender.com/health`. Se a
 resposta não for `200`, o workflow falha e sinaliza um problema no ambiente de
 produção.
 
@@ -640,6 +640,7 @@ Para testar manualmente, rode:
 node scripts/check-deploy.js [URL]
 ```
 
+Se nenhum URL for informado, ele verifica `https://me-passa-a-cola.onrender.com/health`.
 O script retorna código diferente de zero caso a URL não responda com `200`.
 
 ---
