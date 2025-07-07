@@ -43,15 +43,15 @@ async function githubRequest(token, method, url, body, extraHeaders = {}) {
     return await res.json();
 }
 
-async function createIssue({ token, owner, repo, title, body = '', labels = [], assignees = [] }) {
+async function createIssue({ token, owner, repo, title, body = '', labels = [], assignees = [], milestone }) {
     return githubRequest(token, 'POST', `/repos/${owner}/${repo}/issues`, {
-        title, body, labels, assignees
+        title, body, labels, assignees, milestone
     });
 }
 
-async function updateIssue({ token, owner, repo, issue_number, title, body, state, labels, assignees }) {
+async function updateIssue({ token, owner, repo, issue_number, title, body, state, labels, assignees, milestone }) {
     return githubRequest(token, 'PATCH', `/repos/${owner}/${repo}/issues/${issue_number}`, {
-        title, body, state, labels, assignees
+        title, body, state, labels, assignees, milestone
     });
 }
 
@@ -81,6 +81,15 @@ async function createLabel({ token, owner, repo, name, color = 'ffffff', descrip
 
 async function createMilestone({ token, owner, repo, title, state = 'open', description = '', due_on }) {
     return githubRequest(token, 'POST', `/repos/${owner}/${repo}/milestones`, { title, state, description, due_on });
+}
+
+async function listMilestones({ token, owner, repo, state = 'open' }) {
+    const searchParams = new URLSearchParams({ state });
+    return githubRequest(token, 'GET', `/repos/${owner}/${repo}/milestones?${searchParams.toString()}`);
+}
+
+async function updateMilestone({ token, owner, repo, milestone_number, ...data }) {
+    return githubRequest(token, 'PATCH', `/repos/${owner}/${repo}/milestones/${milestone_number}`, data);
 }
 
 async function createProject({ token, owner, repo, name, body = '' }) {
@@ -143,6 +152,8 @@ module.exports = {
     getWorkflowRun,
     createLabel,
     createMilestone,
+    listMilestones,
+    updateMilestone,
     createProject,
     createProjectColumn,
     listProjects,

@@ -255,6 +255,28 @@
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubMilestoneCreate" } } }
         },
         "responses": { "200": { "description": "Sucesso" } }
+      },
+      "get": {
+        "operationId": "listarMilestones",
+        "description": "Lista milestones do repositório",
+        "parameters": [
+          { "name": "token", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "owner", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "repo", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "state", "in": "query", "required": false, "schema": { "type": "string", "default": "open" } }
+        ],
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
+    "/github-milestones/{number}": {
+      "patch": {
+        "operationId": "atualizarMilestone",
+        "description": "Atualiza uma milestone",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubMilestoneUpdate" } } }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
       }
     },
     "/github-projects": {
@@ -605,6 +627,12 @@
                 { "type": "string" }
               ]
             },
+            "milestone": {
+              "oneOf": [
+                { "type": "integer" },
+                { "type": "string" }
+              ]
+            },
             "column_id": {
               "type": "integer",
               "description": "Opcional: ID da coluna do projeto. Se ausente, a primeira coluna do primeiro projeto será usada, se houver"
@@ -630,6 +658,12 @@
             "assignees": {
               "oneOf": [
                 { "type": "array", "items": { "type": "string" } },
+                { "type": "string" }
+              ]
+            }
+            ,"milestone": {
+              "oneOf": [
+                { "type": "integer" },
                 { "type": "string" }
               ]
             }
@@ -681,6 +715,19 @@
             "due_on": { "type": "string" }
           },
           "required": ["token", "owner", "repo", "title"]
+        },
+        "GithubMilestoneUpdate": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "owner": { "type": "string" },
+            "repo": { "type": "string" },
+            "title": { "type": "string" },
+            "state": { "type": "string" },
+            "description": { "type": "string" },
+            "due_on": { "type": "string" }
+          },
+          "required": ["token", "owner", "repo"]
         },
         "GithubProjectCreate": {
           "type": "object",

@@ -10,6 +10,7 @@ async function main() {
   await testCloneRepoPull();
   await testGitFileRoute();
   await testGithubProjectRoutes();
+  await testGithubMilestoneRoutes();
 }
 
 function startServer() {
@@ -153,6 +154,54 @@ async function testGithubProjectRoutes() {
   assert.strictEqual(cardRes.status, 200);
   const cardData = await cardRes.json();
   assert(cardData.card);
+
+  server.close();
+  global.fetch = originalFetch;
+}
+
+async function testGithubMilestoneRoutes() {
+  const server = startServer();
+  const port = server.address().port;
+
+  const originalFetch = global.fetch;
+  global.fetch = async (url, options) => {
+    if (url.startsWith('https://api.github.com/repos/o/r/milestones')) {
+      if (options.method === 'POST') {
+        return { ok: true, json: async () => ({ number: 1, title: 'M1' }) };
+      }
+      if (options.method === 'GET') {
+        return { ok: true, json: async () => ([{ number: 1, title: 'M1' }]) };
+      }
+      if (options.method === 'PATCH') {
+        return { ok: true, json: async () => ({ number: 1, title: 'M1 edit' }) };
+      }
+    }
+    if (url.startsWith('https://api.github.com/repos/o/r/issues')) {
+      return { ok: true, json: async () => ({ node_id: 'n1' }) };
+    }
+    return originalFetch(url, options);
+  };
+
+  const mRes = await fetch(`http://localhost:${port}/github-milestones`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: 't', owner: 'o', repo: 'r', title: 'M1' })
+  });
+  assert.strictEqual(mRes.status, 200);
+  const mData = await mRes.json();
+  assert(mData.milestone);
+
+  const issueRes = await fetch(`http://localhost:${port}/github-issues`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: 't', owner: 'o', repo: 'r', title: 'I', milestone: 'M1' })
+  });
+  assert.strictEqual(issueRes.status, 200);
+
+  const listRes = await fetch(`http://localhost:${port}/github-milestones?token=t&owner=o&repo=r`);
+  assert.strictEqual(listRes.status, 200);
+  const listData = await listRes.json();
+  assert(Array.isArray(listData.milestones));
 
   server.close();
   global.fetch = originalFetch;

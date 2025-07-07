@@ -68,6 +68,14 @@ Cria uma label no repositório
 
 Cria uma milestone
 
+## GET /github-milestones
+
+Lista milestones do repositório
+
+## PATCH /github-milestones/{number}
+
+Atualiza uma milestone
+
 ## POST /github-projects
 
 Cria um projeto via GraphQL
