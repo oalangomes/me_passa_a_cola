@@ -1,16 +1,9 @@
 # API
 
-## POST /create-notion-content
+## POST /notion-content
 
-Envia o conteúdo dos resumos Notion informados no corpo.
-
-## POST /create-notion-flashcards
-
-Envia o conteúdo dos flashcards Notion informados no corpo.
-
-## POST /create-notion-cronograma
-
-Envia itens de cronograma para o Notion.
+Cria conteúdo no Notion de acordo com o campo `type` enviado no corpo
+(`resumo`, `flashcards` ou `cronograma`).
 
 ## GET /notion-content
 

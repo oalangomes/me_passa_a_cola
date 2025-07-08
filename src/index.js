@@ -109,8 +109,7 @@ function parseGitHubRepo(url) {
     return { owner: match[1], repo: match[2].replace(/\.git$/, '') };
 }
 
-// Endpoint principal
-app.post("/create-notion-content", async (req, res) => {
+async function createNotionResumo(req, res) {
     try {
         const {
             notion_token,
@@ -182,9 +181,9 @@ app.post("/create-notion-content", async (req, res) => {
         console.error(err);
         res.status(500).json({ error: err.message });
     }
-});
+}
 
-app.post("/create-notion-flashcards", async (req, res) => {
+async function createNotionFlashcards(req, res) {
     try {
         const {
             notion_token,
@@ -267,9 +266,9 @@ app.post("/create-notion-flashcards", async (req, res) => {
         console.error(err);
         res.status(500).json({ error: err.message });
     }
-});
+}
 
-app.post('/create-notion-cronograma', async (req, res) => {
+async function createNotionCronograma(req, res) {
     try {
         const {
             notion_token,
@@ -347,6 +346,16 @@ app.post('/create-notion-cronograma', async (req, res) => {
         console.error(err);
         res.status(500).json({ error: err.message });
     }
+}
+
+app.post('/notion-content', async (req, res) => {
+    const { type, ...body } = req.body || {};
+    if (!type) return res.status(400).json({ error: 'type é obrigatório' });
+    req.body = body;
+    if (type === 'resumo') return createNotionResumo(req, res);
+    if (type === 'flashcards') return createNotionFlashcards(req, res);
+    if (type === 'cronograma') return createNotionCronograma(req, res);
+    return res.status(400).json({ error: 'Tipo inválido' });
 });
 
 app.post('/pdf-to-notion', async (req, res) => {

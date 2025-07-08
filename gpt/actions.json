@@ -9,60 +9,20 @@
     { "url": "https://me-passa-a-cola.onrender.com" }
   ],
   "paths": {
-    "/create-notion-content": {
+    "/notion-content": {
       "post": {
-        "operationId": "enviarResumos",
-        "description": "Envia o conteúdo dos resumos Notion informados no corpo.",
+        "operationId": "criarConteudoNotion",
+        "description": "Cria conteúdo no Notion conforme o tipo informado.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NotionContent"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Sucesso" }
-        }
-      }
-    },
-    "/create-notion-flashcards": {
-      "post": {
-        "operationId": "enviarFlashcards",
-        "description": "Envia o conteúdo dos flashcards Notion informados no corpo.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NotionFlashcards"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Sucesso" }
-        }
-      }
-    },
-    "/create-notion-cronograma": {
-      "post": {
-        "operationId": "enviarCronograma",
-        "description": "Envia itens de cronograma para o Notion.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/NotionCronograma" }
+              "schema": { "$ref": "#/components/schemas/NotionContentUnified" }
             }
           }
         },
         "responses": { "200": { "description": "Sucesso" } }
-      }
-    },
-    "/notion-content": {
+      },
       "get": {
         "operationId": "buscarConteudoNotion",
         "description": "Busca conteúdos já registrados no Notion usando filtros de tema, subtítulo ou tipo.",
@@ -552,6 +512,14 @@
           }
         },
         "required": ["tema", "cronograma", "notion_token"]
+      },
+      "NotionContentUnified": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "enum": ["resumo", "flashcards", "cronograma"] }
+        },
+        "required": ["type"],
+        "additionalProperties": true
       },
       "GitCommit": {
         "type": "object",

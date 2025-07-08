@@ -36,7 +36,7 @@ async function testBasicEndpoints() {
   const specRes = await fetch(`http://localhost:${port}/api-docs.json`);
   assert.strictEqual(specRes.status, 200);
   const spec = await specRes.json();
-  assert(spec.paths['/create-notion-content']);
+  assert(spec.paths['/notion-content']);
   assert(spec.paths['/github-issues']);
   assert(spec.paths['/github-projects']);
   assert(spec.paths['/github-projects/columns/cards']);
