@@ -110,6 +110,22 @@ Cria um pull request
 
 Cria e mescla automaticamente um pull request a partir de um template definido em `.cola-config`. Envie `autoClose: true` para fechar o PR após o merge.
 
+```http
+POST /github-pulls/auto
+
+{
+  "token": "ghp_xxx",
+  "owner": "usuario",
+  "repo": "repositorio",
+  "head": "feature-branch",
+  "base": "main",
+  "repoUrl": "https://github.com/usuario/repositorio.git",
+  "credentials": "usuario:token",
+  "type": "feature",
+  "autoClose": true
+}
+```
+
 ## PATCH /github-pulls
 
 Atualiza um pull request
