@@ -1019,12 +1019,12 @@ app.patch('/github-issues', async (req, res) => {
 });
 
 app.delete('/github-issues', async (req, res) => {
-    const { token, owner, repo, number } = req.body;
+    const { token, owner, repo, number } = req.query;
     if (!token || !owner || !repo || !number) {
         return res.status(400).json({ error: 'token, owner, repo e number são obrigatórios' });
     }
     try {
-        const issue = await closeIssue({ token, owner, repo, issue_number: number });
+        const issue = await closeIssue({ token, owner, repo, issue_number: Number(number) });
         res.json({ ok: true, issue });
     } catch (err) {
         console.error(err);
@@ -1267,12 +1267,12 @@ app.patch('/github-pulls', async (req, res) => {
 });
 
 app.delete('/github-pulls', async (req, res) => {
-    const { token, owner, repo, number } = req.body;
+    const { token, owner, repo, number } = req.query;
     if (!token || !owner || !repo || !number) {
         return res.status(400).json({ error: 'token, owner, repo e number são obrigatórios' });
     }
     try {
-        const pull = await closePullRequest({ token, owner, repo, pull_number: number });
+        const pull = await closePullRequest({ token, owner, repo, pull_number: Number(number) });
         res.json({ ok: true, pull });
     } catch (err) {
         console.error(err);

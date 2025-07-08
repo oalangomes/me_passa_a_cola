@@ -246,10 +246,12 @@
       "delete": {
         "operationId": "fecharIssue",
         "description": "Fecha uma issue",
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubIssueDelete" } } }
-        },
+        "parameters": [
+          { "name": "token", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "owner", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "repo", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "number", "in": "query", "required": true, "schema": { "type": "integer" } }
+        ],
         "responses": { "200": { "description": "Sucesso" } }
       }
     },
@@ -399,14 +401,12 @@
       "delete": {
         "operationId": "fecharPullRequest",
         "description": "Fecha um pull request",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/GithubPullDelete" }
-            }
-          }
-        },
+        "parameters": [
+          { "name": "token", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "owner", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "repo", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "number", "in": "query", "required": true, "schema": { "type": "integer" } }
+        ],
         "responses": { "200": { "description": "Sucesso" } }
       }
     },
