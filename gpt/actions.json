@@ -107,6 +107,48 @@
         "responses": { "200": { "description": "Sucesso" } }
       }
     },
+    "/git-files": {
+      "get": {
+        "operationId": "listarArquivosGit",
+        "description": "Lista os arquivos de um diret\u00f3rio do reposit\u00f3rio",
+        "parameters": [
+          { "name": "x-api-token", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "repoUrl", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "credentials", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "path", "in": "query", "required": false, "schema": { "type": "string", "default": "." } }
+        ],
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
+    "/git-file": {
+      "get": {
+        "operationId": "obterArquivoGit",
+        "description": "Retorna o conte\u00fado de um arquivo",
+        "parameters": [
+          { "name": "x-api-token", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "repoUrl", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "credentials", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "file", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Sucesso" } }
+      },
+      "patch": {
+        "operationId": "atualizarArquivoGit",
+        "description": "Atualiza ou cria um arquivo e realiza commit",
+        "parameters": [
+          { "name": "x-api-token", "in": "header", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/GitFileUpdate" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
     "/git-commit": {
       "post": {
         "operationId": "gitCommit",
@@ -537,6 +579,21 @@
         "required": ["repoUrl", "credentials"]
   },
 
+      "GitFileUpdate": {
+        "type": "object",
+        "properties": {
+          "repoUrl": { "type": "string" },
+          "credentials": { "type": "string" },
+          "filePath": { "type": "string" },
+          "content": { "type": "string" },
+          "commitMessage": { "type": "string" },
+          "branch": { "type": "string" },
+          "githubToken": { "type": "string" },
+          "githubOwner": { "type": "string" },
+          "githubRepo": { "type": "string" }
+        },
+        "required": ["repoUrl", "credentials", "filePath", "content"]
+      },
       "NotionContentGit": {
         "type": "object",
         "properties": {

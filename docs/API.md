@@ -24,6 +24,20 @@ Atualiza títulos e tags das subpáginas de um tema no Notion.
 
 Remove tags não utilizadas do banco de dados.
 
+
+## GET /git-files
+
+Lista os arquivos de um diretório do repositório.
+
+## GET /git-file
+
+
+Retorna o conteúdo de um arquivo do repositório.
+
+## PATCH /git-file
+
+Atualiza ou cria um arquivo e realiza commit.
+
 ## POST /git-commit
 
 Realiza commit em repositório privado usando token
