@@ -1,0 +1,24 @@
+name: Verificar Index Docs
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+  workflow_dispatch:
+
+jobs:
+  verify-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Verificar docs/index.md
+        run: |
+          if [ ! -f docs/index.md ]; then
+            echo "Arquivo docs/index.md não encontrado" >&2
+            exit 1
+          fi
+          if [ ! -s docs/index.md ]; then
+            echo "Arquivo docs/index.md está vazio" >&2
+            exit 1
+          fi
+          echo "docs/index.md presente e não vazio"
