@@ -10,6 +10,7 @@ async function main() {
   await testBasicEndpoints();
   await testCloneRepoPull();
   await testGitFileRoute();
+  await testGitFilePatch();
   await testGithubProjectRoutes();
   await testGithubMilestoneRoutes();
   await testGithubIssueDefaults();
@@ -82,6 +83,42 @@ async function testGitFileRoute() {
   assert.strictEqual(res.status, 200);
   const data = await res.json();
   assert.strictEqual(data.content.trim(), 'hello');
+
+  server.close();
+}
+
+async function testGitFilePatch() {
+  execSync('rm -rf /tmp/origin4.git');
+  execSync('git init --bare /tmp/origin4.git');
+
+  execSync('rm -rf /tmp/work4');
+  execSync('git clone /tmp/origin4.git /tmp/work4');
+  execSync('cd /tmp/work4 && git checkout -b main');
+  fs.writeFileSync('/tmp/work4/readme.txt', 'init');
+  execSync('cd /tmp/work4 && git add readme.txt && git commit -m init && git push origin main');
+  execSync('git --git-dir=/tmp/origin4.git symbolic-ref HEAD refs/heads/main');
+
+  const server = startServer();
+  const port = server.address().port;
+
+  const res = await fetch(`http://localhost:${port}/git-file?x-api-token=testtoken`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      repoUrl: '/tmp/origin4.git',
+      credentials: 'x',
+      content: { 'a.txt': 'A', 'b.txt': 'B' },
+      commitMessage: 'feat: multi',
+      branch: 'main'
+    })
+  });
+  assert.strictEqual(res.status, 200);
+
+  const repoPath = await cloneRepo('/tmp/origin4.git');
+  const a = fs.readFileSync(path.join(repoPath, 'a.txt'), 'utf8').trim();
+  const b = fs.readFileSync(path.join(repoPath, 'b.txt'), 'utf8').trim();
+  assert.strictEqual(a, 'A');
+  assert.strictEqual(b, 'B');
 
   server.close();
 }

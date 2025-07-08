@@ -702,13 +702,17 @@ app.patch('/git-file', async (req, res) => {
         repoUrl,
         credentials,
         filePath,
+        files = [],
         content,
         commitMessage,
         branch = 'main'
     } = req.body;
 
-    if (!repoUrl || !credentials || !filePath) {
-        return res.status(400).json({ error: 'repoUrl, credentials e filePath são obrigatórios' });
+    if (!repoUrl || !credentials) {
+        return res.status(400).json({ error: 'repoUrl e credentials são obrigatórios' });
+    }
+    if (!filePath && !files.length && !content) {
+        return res.status(400).json({ error: 'Informe filePath ou files e content' });
     }
 
     try {
@@ -719,69 +723,24 @@ app.patch('/git-file', async (req, res) => {
             const templatePath = config.commitTemplate || '.github/commit-template.md';
             finalMsg = loadCommitTemplate(repoPath, templatePath) || 'chore: update file';
         }
-        const fullPath = path.join(repoPath, filePath);
-        fs.mkdirSync(path.dirname(fullPath), { recursive: true });
-        fs.writeFileSync(fullPath, content);
-
-        await commitAndPush(repoPath, finalMsg, [fullPath], branch);
-
-        const workflowId = config.commitWorkflow || config.workflow || config.workflow_id;
-        if (workflowId) {
-            const repoInfo = parseGitHubRepo(repoUrl);
-            const owner = req.body.githubOwner || config.githubOwner || repoInfo.owner;
-            const repo = req.body.githubRepo || config.githubRepo || repoInfo.repo;
-            const token = req.body.githubToken || config.githubToken;
-            if (token && owner && repo) {
-                try {
-                    await dispatchWorkflow({ token, owner, repo, workflow_id: workflowId, ref: branch });
-                } catch (wErr) {
-                    console.warn('Falha ao acionar workflow:', wErr.message);
-                }
-            }
+        let filesToWrite = {};
+        if (filePath && typeof content === 'string') {
+            filesToWrite[filePath] = content;
+        }
+        if (content && typeof content === 'object') {
+            filesToWrite = { ...filesToWrite, ...content };
         }
 
-        res.json({ ok: true });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.post('/git-commit', async (req, res) => {
-    const token = req.query['x-api-token'] || req.header('x-api-token');
-    if (token !== API_TOKEN) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const {
-        repoUrl,
-        credentials,
-        message,
-        files = [],
-        branch = 'main',
-        content = {}
-    } = req.body;
-
-    if (!repoUrl || !credentials) {
-        return res.status(400).json({ error: 'repoUrl and credentials are required' });
-    }
-
-    try {
-        const repoPath = await cloneRepo(repoUrl, credentials);
-        const config = loadColaConfig(repoPath);
-        let finalMsg = message;
-        if (!finalMsg) {
-            const templatePath = config.commitTemplate || '.github/commit-template.md';
-            finalMsg = loadCommitTemplate(repoPath, templatePath) || 'chore: update files';
+        for (const [fp, fc] of Object.entries(filesToWrite)) {
+            const full = path.join(repoPath, fp);
+            fs.mkdirSync(path.dirname(full), { recursive: true });
+            fs.writeFileSync(full, fc);
         }
 
-        for (const [filePath, fileContent] of Object.entries(content)) {
-            const fullPath = path.join(repoPath, filePath);
-            fs.mkdirSync(path.dirname(fullPath), { recursive: true });
-            fs.writeFileSync(fullPath, fileContent);
-        }
+        const pathsToAdd = files.length
+            ? files.map(f => path.join(repoPath, f))
+            : Object.keys(filesToWrite).map(f => path.join(repoPath, f));
 
-        const pathsToAdd = files.map(f => path.join(repoPath, f));
         await commitAndPush(repoPath, finalMsg, pathsToAdd, branch);
 
         const workflowId = config.commitWorkflow || config.workflow || config.workflow_id;
@@ -805,6 +764,7 @@ app.post('/git-commit', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 app.post('/create-notion-content-git', async (req, res) => {
     const token = req.query['x-api-token'] || req.header('x-api-token');

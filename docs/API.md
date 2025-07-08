@@ -29,11 +29,7 @@ Retorna o conteúdo de um arquivo do repositório.
 
 ## PATCH /git-file
 
-Atualiza ou cria um arquivo e realiza commit.
-
-## POST /git-commit
-
-Realiza commit em repositório privado usando token
+Atualiza ou cria arquivos e realiza commit.
 
 ## POST /create-notion-content-git
 

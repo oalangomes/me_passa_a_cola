@@ -109,29 +109,6 @@
         "responses": { "200": { "description": "Sucesso" } }
       }
     },
-    "/git-commit": {
-      "post": {
-        "operationId": "gitCommit",
-        "description": "Realiza commit em repositório privado usando token",
-        "parameters": [
-          {
-            "name": "x-api-token",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/GitCommit" }
-            }
-          }
-        },
-        "responses": { "200": { "description": "Sucesso" } }
-      }
-    },
     "/create-notion-content-git": {
       "post": {
         "operationId": "criarNotionGit",
@@ -506,27 +483,6 @@
         "required": ["type"],
         "additionalProperties": true
       },
-      "GitCommit": {
-        "type": "object",
-        "properties": {
-          "repoUrl": { "type": "string" },
-          "credentials": { "type": "string" },
-          "message": { "type": "string" },
-          "files": {
-            "type": "array",
-            "items": { "type": "string" }
-          },
-          "branch": {
-            "type": "string",
-            "description": "Nome do branch (padr\u00e3o 'main')"
-          },
-          "content": {
-            "type": "object",
-            "additionalProperties": { "type": "string" }
-          }
-        },
-        "required": ["repoUrl", "credentials"]
-  },
 
       "GitFileUpdate": {
         "type": "object",
@@ -534,14 +490,15 @@
           "repoUrl": { "type": "string" },
           "credentials": { "type": "string" },
           "filePath": { "type": "string" },
-          "content": { "type": "string" },
+          "files": { "type": "array", "items": { "type": "string" } },
+          "content": { "type": "object", "additionalProperties": { "type": "string" } },
           "commitMessage": { "type": "string" },
           "branch": { "type": "string" },
           "githubToken": { "type": "string" },
           "githubOwner": { "type": "string" },
           "githubRepo": { "type": "string" }
         },
-        "required": ["repoUrl", "credentials", "filePath", "content"]
+        "required": ["repoUrl", "credentials", "content"]
       },
       "NotionContentGit": {
         "type": "object",
