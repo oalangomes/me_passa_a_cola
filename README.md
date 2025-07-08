@@ -320,9 +320,7 @@ A API disponibiliza a rota `POST /git-commit` para realizar commits em repositó
 ### Requisição
 
 ```http
-POST /git-commit
-Headers:
-  x-api-token: <seu_token>
+POST /git-commit?x-api-token=<seu_token>
 
 {
   "repoUrl": "https://github.com/usuario/repositorio.git",
@@ -339,7 +337,7 @@ Headers:
 }
 ```
 
-O campo `branch` é opcional e assume `main` como padrão. Os caminhos listados em `files` são relativos ao repositório. O objeto `content` permite criar arquivos fornecendo pares caminho/conteúdo. O acesso é protegido pelo cabeçalho `x-api-token`.
+O campo `branch` é opcional e assume `main` como padrão. Os caminhos listados em `files` são relativos ao repositório. O objeto `content` permite criar arquivos fornecendo pares caminho/conteúdo. O acesso é protegido pelo parâmetro de query `x-api-token`.
 Se o arquivo `.cola-config` contiver `commitWorkflow`, esse workflow será disparado após o commit usando as credenciais informadas.
 
 ## \ud83d\udcc2 Endpoints para arquivos do Git
@@ -357,9 +355,7 @@ Cria o conteúdo no Notion e salva o mesmo texto em um repositório Git.
 ### Requisição
 
 ```http
-POST /create-notion-content-git
-Headers:
-  x-api-token: <seu_token>
+POST /create-notion-content-git?x-api-token=<seu_token>
 
 {
   "repoUrl": "https://github.com/usuario/repositorio.git",

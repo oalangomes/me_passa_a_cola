@@ -637,7 +637,8 @@ app.post('/limpar-tags-orfas', async (req, res) => {
 });
 
 app.get('/git-files', async (req, res) => {
-    if (req.header('x-api-token') !== API_TOKEN) {
+    const token = req.query['x-api-token'] || req.header('x-api-token');
+    if (token !== API_TOKEN) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -658,7 +659,8 @@ app.get('/git-files', async (req, res) => {
 });
 
 app.get('/git-file', async (req, res) => {
-    if (req.header('x-api-token') !== API_TOKEN) {
+    const token = req.query['x-api-token'] || req.header('x-api-token');
+    if (token !== API_TOKEN) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -679,7 +681,8 @@ app.get('/git-file', async (req, res) => {
 });
 
 app.patch('/git-file', async (req, res) => {
-    if (req.header('x-api-token') !== API_TOKEN) {
+    const token = req.query['x-api-token'] || req.header('x-api-token');
+    if (token !== API_TOKEN) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -733,7 +736,8 @@ app.patch('/git-file', async (req, res) => {
 });
 
 app.post('/git-commit', async (req, res) => {
-    if (req.header('x-api-token') !== API_TOKEN) {
+    const token = req.query['x-api-token'] || req.header('x-api-token');
+    if (token !== API_TOKEN) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -791,7 +795,8 @@ app.post('/git-commit', async (req, res) => {
 });
 
 app.post('/create-notion-content-git', async (req, res) => {
-    if (req.header('x-api-token') !== API_TOKEN) {
+    const token = req.query['x-api-token'] || req.header('x-api-token');
+    if (token !== API_TOKEN) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 

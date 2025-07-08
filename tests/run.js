@@ -77,9 +77,7 @@ async function testGitFileRoute() {
   const server = startServer();
   const port = server.address().port;
 
-  const res = await fetch(`http://localhost:${port}/git-file?repoUrl=/tmp/origin3.git&credentials=&file=readme.txt`, {
-    headers: { 'x-api-token': '' }
-  });
+  const res = await fetch(`http://localhost:${port}/git-file?repoUrl=/tmp/origin3.git&credentials=&file=readme.txt&x-api-token=`, {});
   assert.strictEqual(res.status, 200);
   const data = await res.json();
   assert.strictEqual(data.content.trim(), 'hello');
