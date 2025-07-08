@@ -57,8 +57,6 @@
 - 🗂️ Flashcards: sempre com base nos tópicos estruturados (exportáveis ao Notion).
 - 🛄 Exportar para Notion ou Markdown.
 
-## 🖋️ Formatação dos Resumos Detalhados (Markdown)
-
 ## 🖋️ Formatação dos Resumos Detalhados e Artigos (Markdown)
 
 - Sempre começar com `#` Título do tema
