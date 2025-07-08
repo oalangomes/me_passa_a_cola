@@ -533,14 +533,7 @@ PATCH /github-issues
 ### Fechar Issue
 
 ```http
-DELETE /github-issues
-
-{
-  "token": "ghp_xxx",
-  "owner": "usuario",
-  "repo": "repositorio",
-  "number": 123
-}
+DELETE /github-issues?token=ghp_xxx&owner=usuario&repo=repositorio&number=123
 ```
 
 ### Listar Issues
@@ -698,14 +691,7 @@ PATCH /github-pulls
 ```
 
 ```http
-DELETE /github-pulls
-
-{
-  "token": "ghp_xxx",
-  "owner": "usuario",
-  "repo": "repositorio",
-  "number": 10
-}
+DELETE /github-pulls?token=ghp_xxx&owner=usuario&repo=repositorio&number=10
 ```
 
 ### Disparar Workflow
