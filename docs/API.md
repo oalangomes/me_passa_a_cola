@@ -3,7 +3,7 @@
 ## POST /notion-content
 
 Cria conteúdo no Notion de acordo com o campo `type` enviado no corpo
-(`resumo`, `flashcards` ou `cronograma`).
+(`resumo`, `flashcards`, `cronograma` ou `pdf`).
 
 ## GET /notion-content
 
@@ -38,10 +38,6 @@ Realiza commit em repositório privado usando token
 ## POST /create-notion-content-git
 
 Cria página no Notion e salva em repositório Git.
-
-## POST /pdf-to-notion
-
-Envia um PDF em base64 para conversão em Markdown e registro no Notion.
 
 ## POST /github-issues
 

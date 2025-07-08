@@ -27,7 +27,7 @@ O "Auxiliar de Projetos" pode realizar as seguintes ações. O modelo deve infer
   - *Ferramentas:* `enviarResumos`, `enviarFlashcards`, `enviarCronograma`.
   - *Parâmetros a inferir:* `notion_token`, `nome_database` (padrão 'Me Passa A Cola (GPT)' ou nome do projeto), `tema` (nome do projeto/feature), `subtitulo` (tópico específico), `resumo`/`flashcards`/`cronograma` (conteúdo gerado), `tags`, `data`.
 - **Converter PDF e Registrar no Notion:** Recebe um arquivo em base64, converte para Markdown e salva na base do Notion.
-  - *Ferramenta:* `enviarPDF`.
+  - *Ferramenta:* `criarConteudoNotion` (use `type: 'pdf'`).
   - *Parâmetros a inferir:* `notion_token`, `nome_database`, `tema`, `subtitulo`, `pdf_base64`, `tags`, `data`.
 - **Versionar Artefatos e Documentações no Repositório (Git):** Realiza commits de arquivos e conteúdos.
   - *Ferramentas:* `gitCommit`, `criarNotionGit` (para conteúdo Notion que também deve ir para o Git).
@@ -106,6 +106,6 @@ O fluxo sugerido é:
 - Criar issue de autenticação via OAuth (`criarIssue`).
 - Resumir reunião e enviar ao Notion (`enviarResumos`).
 - Commit de documentação no repositório (`gitCommit`).
-- Enviar PDF para o Notion (`enviarPDF`).
+- Enviar PDF para o Notion (`criarConteudoNotion` com `type: 'pdf'`).
 - Abrir PR da nova feature (`criarPullRequest` ou `criarPrAutomatico`).
 
