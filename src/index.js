@@ -979,11 +979,10 @@ app.post('/github-issues', async (req, res) => {
     }
 });
 
-app.patch('/github-issues/:number', async (req, res) => {
-    const { token, owner, repo, milestone, repoUrl, credentials } = req.body;
-    const { number } = req.params;
-    if (!token || !owner || !repo) {
-        return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
+app.patch('/github-issues', async (req, res) => {
+    const { token, owner, repo, number, milestone, repoUrl, credentials } = req.body;
+    if (!token || !owner || !repo || !number) {
+        return res.status(400).json({ error: 'token, owner, repo e number são obrigatórios' });
     }
     try {
         let config = {};
@@ -1014,11 +1013,10 @@ app.patch('/github-issues/:number', async (req, res) => {
     }
 });
 
-app.delete('/github-issues/:number', async (req, res) => {
-    const { token, owner, repo } = req.body;
-    const { number } = req.params;
-    if (!token || !owner || !repo) {
-        return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
+app.delete('/github-issues', async (req, res) => {
+    const { token, owner, repo, number } = req.body;
+    if (!token || !owner || !repo || !number) {
+        return res.status(400).json({ error: 'token, owner, repo e number são obrigatórios' });
     }
     try {
         const issue = await closeIssue({ token, owner, repo, issue_number: number });
@@ -1085,11 +1083,10 @@ app.get('/github-milestones', async (req, res) => {
     }
 });
 
-app.patch('/github-milestones/:number', async (req, res) => {
-    const { token, owner, repo } = req.body;
-    const { number } = req.params;
-    if (!token || !owner || !repo) {
-        return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
+app.patch('/github-milestones', async (req, res) => {
+    const { token, owner, repo, number } = req.body;
+    if (!token || !owner || !repo || !number) {
+        return res.status(400).json({ error: 'token, owner, repo e number são obrigatórios' });
     }
     try {
         const milestone = await updateMilestone({ token, owner, repo, milestone_number: number, ...req.body });
@@ -1114,9 +1111,8 @@ app.post('/github-projects', async (req, res) => {
     }
 });
 
-app.post('/github-projects/:project_id/columns', async (req, res) => {
-    const { token, name } = req.body;
-    const { project_id } = req.params;
+app.post('/github-projects/columns', async (req, res) => {
+    const { token, project_id, name } = req.body;
     if (!token || !project_id || !name) {
         return res.status(400).json({ error: 'token, project_id e name são obrigatórios' });
     }
@@ -1129,9 +1125,8 @@ app.post('/github-projects/:project_id/columns', async (req, res) => {
     }
 });
 
-app.post('/github-projects/columns/:column_id/cards', async (req, res) => {
-    const { token, issue_id } = req.body;
-    const { column_id } = req.params;
+app.post('/github-projects/columns/cards', async (req, res) => {
+    const { token, column_id, issue_id } = req.body;
     if (!token || !column_id || !issue_id) {
         return res.status(400).json({ error: 'token, column_id e issue_id são obrigatórios' });
     }
@@ -1158,9 +1153,8 @@ app.get('/github-projects', async (req, res) => {
     }
 });
 
-app.get('/github-projects/:project_id/columns', async (req, res) => {
-    const { token } = req.query;
-    const { project_id } = req.params;
+app.get('/github-projects/columns', async (req, res) => {
+    const { token, project_id } = req.query;
     if (!token || !project_id) {
         return res.status(400).json({ error: 'token e project_id são obrigatórios' });
     }
@@ -1253,11 +1247,10 @@ app.post('/github-pulls/auto', async (req, res) => {
     }
 });
 
-app.patch('/github-pulls/:number', async (req, res) => {
-    const { token, owner, repo } = req.body;
-    const { number } = req.params;
-    if (!token || !owner || !repo) {
-        return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
+app.patch('/github-pulls', async (req, res) => {
+    const { token, owner, repo, number } = req.body;
+    if (!token || !owner || !repo || !number) {
+        return res.status(400).json({ error: 'token, owner, repo e number são obrigatórios' });
     }
     try {
         const pull = await updatePullRequest({ token, owner, repo, pull_number: number, ...req.body });
@@ -1268,11 +1261,10 @@ app.patch('/github-pulls/:number', async (req, res) => {
     }
 });
 
-app.delete('/github-pulls/:number', async (req, res) => {
-    const { token, owner, repo } = req.body;
-    const { number } = req.params;
-    if (!token || !owner || !repo) {
-        return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
+app.delete('/github-pulls', async (req, res) => {
+    const { token, owner, repo, number } = req.body;
+    if (!token || !owner || !repo || !number) {
+        return res.status(400).json({ error: 'token, owner, repo e number são obrigatórios' });
     }
     try {
         const pull = await closePullRequest({ token, owner, repo, pull_number: number });

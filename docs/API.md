@@ -47,11 +47,11 @@ do arquivo `.cola-config` são utilizados, quando presentes.
 
 Lista issues do repositório
 
-## PATCH /github-issues/{number}
+## PATCH /github-issues
 
 Atualiza uma issue existente
 
-## DELETE /github-issues/{number}
+## DELETE /github-issues
 
 Fecha uma issue
 
@@ -75,7 +75,7 @@ Cria uma milestone
 
 Lista milestones do repositório
 
-## PATCH /github-milestones/{number}
+## PATCH /github-milestones
 
 Atualiza uma milestone
 
@@ -87,18 +87,18 @@ Cria um projeto via GraphQL
 
 Lista projetos do repositório
 
-## POST /github-projects/{project_id}/columns
+## POST /github-projects/columns
 
 Cria coluna em um projeto via GraphQL
 
 > **Nota**: se a resposta do GitHub contiver `errors`, o serviço retorna
 > a mensagem de erro fornecida pela API.
 
-## GET /github-projects/{project_id}/columns
+## GET /github-projects/columns
 
 Lista colunas de um projeto
 
-## POST /github-projects/columns/{column_id}/cards
+## POST /github-projects/columns/cards
 
 Adiciona issue ao projeto via GraphQL (use o `node_id` da issue)
 
@@ -110,11 +110,11 @@ Cria um pull request
 
 Cria e mescla automaticamente um pull request a partir de um template definido em `.cola-config`. Envie `autoClose: true` para fechar o PR após o merge.
 
-## PATCH /github-pulls/{number}
+## PATCH /github-pulls
 
 Atualiza um pull request
 
-## DELETE /github-pulls/{number}
+## DELETE /github-pulls
 
 Fecha um pull request
 

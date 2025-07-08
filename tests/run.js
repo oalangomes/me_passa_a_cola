@@ -39,7 +39,7 @@ async function testBasicEndpoints() {
   assert(spec.paths['/create-notion-content']);
   assert(spec.paths['/github-issues']);
   assert(spec.paths['/github-projects']);
-  assert(spec.paths['/github-projects/columns/{column_id}/cards']);
+  assert(spec.paths['/github-projects/columns/cards']);
   server.close();
 }
 
@@ -139,20 +139,20 @@ async function testGithubProjectRoutes() {
   assert(projectData.project);
   const projectId = projectData.project.id;
 
-  const columnRes = await fetch(`http://localhost:${port}/github-projects/${projectId}/columns`, {
+  const columnRes = await fetch(`http://localhost:${port}/github-projects/columns`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token: 't', name: 'Col' })
+    body: JSON.stringify({ token: 't', project_id: projectId, name: 'Col' })
   });
   assert.strictEqual(columnRes.status, 200);
   const columnData = await columnRes.json();
   assert(columnData.column);
   const columnId = columnData.column.id;
 
-  const cardRes = await fetch(`http://localhost:${port}/github-projects/columns/${columnId}/cards`, {
+  const cardRes = await fetch(`http://localhost:${port}/github-projects/columns/cards`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token: 't', issue_id: 'issue1' })
+    body: JSON.stringify({ token: 't', column_id: columnId, issue_id: 'issue1' })
   });
   assert.strictEqual(cardRes.status, 200);
   const cardData = await cardRes.json();
