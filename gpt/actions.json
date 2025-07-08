@@ -368,6 +368,17 @@
         "responses": { "200": { "description": "Sucesso" } }
       }
     },
+    "/github-pulls/auto": {
+      "post": {
+        "operationId": "criarPrAutomatico",
+        "description": "Cria e mescla automaticamente um pull request usando template definido em `.cola-config`",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubPullAuto" } } }
+        },
+        "responses": { "200": { "description": "Sucesso" } }
+      }
+    },
     "/linear-issues/project": {
       "post": {
         "operationId": "atualizarProjetoIssueLinear",
@@ -794,6 +805,21 @@
             "number": { "type": "integer" }
           },
           "required": ["token", "owner", "repo", "number"]
+        },
+        "GithubPullAuto": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "owner": { "type": "string" },
+            "repo": { "type": "string" },
+            "head": { "type": "string" },
+            "base": { "type": "string" },
+            "repoUrl": { "type": "string" },
+            "credentials": { "type": "string" },
+            "type": { "type": "string" },
+            "autoClose": { "type": "boolean" }
+          },
+          "required": ["token", "owner", "repo", "head", "repoUrl"]
         },
         "LinearIssueProjectUpdate": {
           "type": "object",

@@ -24,6 +24,8 @@ Os campos `defaultIssueMilestone`, `defaultIssueProject` e `defaultIssueColumn` 
 
 Use `pullRequestTemplates` para apontar arquivos de template por tipo de PR. O título será a primeira linha do arquivo e o restante compõe o corpo do pull request.
 
+Esses templates também são utilizados pela rota `/github-pulls/auto`, que cria e mescla PRs automaticamente. Envie `autoClose: true` para fechar o PR após o merge.
+
 Também é possível definir `issueRules` para aplicar ações automáticas em issues recém criadas ou atualizadas. Exemplo:
 
 ```yaml
