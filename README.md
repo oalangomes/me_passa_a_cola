@@ -350,6 +350,30 @@ Permitem listar diret\u00f3rios e ler ou atualizar arquivos individuais.
 - `GET /git-file` obt\u00e9m o conte\u00fado de um arquivo (par\u00e2metros: `repoUrl`, `credentials`, `file`).
 - `PATCH /git-file` cria ou atualiza o arquivo e executa um commit.
 
+Exemplos de uso:
+
+```http
+GET /git-files?repoUrl=https://github.com/usuario/repositorio.git&credentials=usuario:token&path=docs
+```
+
+```http
+GET /git-file?repoUrl=https://github.com/usuario/repositorio.git&credentials=usuario:token&file=README.md
+```
+
+```http
+PATCH /git-file
+Headers:
+  x-api-token: <seu_token>
+
+{
+  "repoUrl": "https://github.com/usuario/repositorio.git",
+  "credentials": "usuario:token",
+  "filePath": "docs/novo.md",
+  "content": "# Novo conte\u00fado",
+  "commitMessage": "docs: atualiza arquivo"
+}
+```
+
 ## 🚀 Endpoint para Notion + Git
 
 Cria o conteúdo no Notion e salva o mesmo texto em um repositório Git.

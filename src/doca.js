@@ -6,7 +6,10 @@ const specs = fs.readdirSync(gptDir)
   .map(f => JSON.parse(fs.readFileSync(path.join(gptDir, f), 'utf8')));
 const spec = specs.reduce((base, s) => {
   if (!base) return { ...s };
-  Object.assign(base.paths, s.paths);
+  for (const [route, methods] of Object.entries(s.paths)) {
+    base.paths[route] = base.paths[route] || {};
+    Object.assign(base.paths[route], methods);
+  }
   if (s.components && s.components.schemas) {
     base.components = base.components || { schemas: {} };
     base.components.schemas = {
