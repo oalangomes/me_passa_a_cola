@@ -112,7 +112,7 @@
         "operationId": "listarArquivosGit",
         "description": "Lista os arquivos de um diret\u00f3rio do reposit\u00f3rio",
         "parameters": [
-          { "name": "x-api-token", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-api-token", "in": "query", "required": true, "schema": { "type": "string" } },
           { "name": "repoUrl", "in": "query", "required": true, "schema": { "type": "string" } },
           { "name": "credentials", "in": "query", "required": true, "schema": { "type": "string" } },
           { "name": "path", "in": "query", "required": false, "schema": { "type": "string", "default": "." } }
@@ -125,7 +125,7 @@
         "operationId": "obterArquivoGit",
         "description": "Retorna o conte\u00fado de um arquivo",
         "parameters": [
-          { "name": "x-api-token", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-api-token", "in": "query", "required": true, "schema": { "type": "string" } },
           { "name": "repoUrl", "in": "query", "required": true, "schema": { "type": "string" } },
           { "name": "credentials", "in": "query", "required": true, "schema": { "type": "string" } },
           { "name": "file", "in": "query", "required": true, "schema": { "type": "string" } }
@@ -136,7 +136,7 @@
         "operationId": "atualizarArquivoGit",
         "description": "Atualiza ou cria um arquivo e realiza commit",
         "parameters": [
-          { "name": "x-api-token", "in": "header", "required": true, "schema": { "type": "string" } }
+          { "name": "x-api-token", "in": "query", "required": true, "schema": { "type": "string" } }
         ],
         "requestBody": {
           "required": true,
@@ -156,7 +156,7 @@
         "parameters": [
           {
             "name": "x-api-token",
-            "in": "header",
+            "in": "query",
             "required": true,
             "schema": { "type": "string" }
           }
@@ -179,7 +179,7 @@
         "parameters": [
           {
             "name": "x-api-token",
-            "in": "header",
+            "in": "query",
             "required": true,
             "schema": { "type": "string" }
           }
