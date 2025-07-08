@@ -10,11 +10,10 @@ async function cloneRepo(repoUrl, credentials) {
     const repoPath = path.join('/tmp', repoName);
     const git = simpleGit();
 
-    if (!fs.existsSync(repoPath)) {
-        await git.clone(authUrl, repoPath);
-    } else {
-        await simpleGit(repoPath).pull();
+    if (fs.existsSync(repoPath)) {
+        fs.rmSync(repoPath, { recursive: true, force: true });
     }
+    await git.clone(authUrl, repoPath);
 
     return repoPath;
 }

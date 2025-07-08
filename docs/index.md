@@ -454,14 +454,15 @@ Exemplo de `.github/commit-template.md`:
 chore: atualiza documentos
 ```
 
-## 📄 Endpoint para PDF
+## 📄 Enviar PDF para o Notion
 
-Envia um arquivo PDF em base64 e registra o texto no Notion.
+Envia um arquivo PDF em base64, converte para Markdown e registra o texto usando `POST /notion-content` com `type` igual a `pdf`.
 
 ```http
-POST /pdf-to-notion
+POST /notion-content
 
 {
+  "type": "pdf",
   "notion_token": "secret_xxx",
   "nome_database": "Me Passa A Cola (GPT)",
   "tema": "Matéria X",
@@ -472,7 +473,7 @@ POST /pdf-to-notion
 }
 ```
 
-O PDF é convertido em Markdown antes de ser enviado ao Notion.
+O PDF é convertido em Markdown antes de ser salvo.
 
 ## 🧹 Endpoint para limpar tags órfãs
 

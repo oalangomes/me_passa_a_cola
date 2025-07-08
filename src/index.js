@@ -348,17 +348,7 @@ async function createNotionCronograma(req, res) {
     }
 }
 
-app.post('/notion-content', async (req, res) => {
-    const { type, ...body } = req.body || {};
-    if (!type) return res.status(400).json({ error: 'type é obrigatório' });
-    req.body = body;
-    if (type === 'resumo') return createNotionResumo(req, res);
-    if (type === 'flashcards') return createNotionFlashcards(req, res);
-    if (type === 'cronograma') return createNotionCronograma(req, res);
-    return res.status(400).json({ error: 'Tipo inválido' });
-});
-
-app.post('/pdf-to-notion', async (req, res) => {
+async function createNotionPdf(req, res) {
     try {
         const {
             notion_token,
@@ -416,7 +406,20 @@ app.post('/pdf-to-notion', async (req, res) => {
         console.error(err);
         res.status(500).json({ error: err.message });
     }
+}
+
+app.post('/notion-content', async (req, res) => {
+    const { type, ...body } = req.body || {};
+    if (!type) return res.status(400).json({ error: 'type é obrigatório' });
+    req.body = body;
+    if (type === 'resumo') return createNotionResumo(req, res);
+    if (type === 'flashcards') return createNotionFlashcards(req, res);
+    if (type === 'cronograma') return createNotionCronograma(req, res);
+    if (type === 'pdf') return createNotionPdf(req, res);
+    return res.status(400).json({ error: 'Tipo inválido' });
 });
+
+// rota antiga removida em favor do tipo "pdf" dentro de /notion-content
 
 app.get("/notion-content", async (req, res) => {
     try {
@@ -673,10 +676,10 @@ app.get('/git-file', async (req, res) => {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { repoUrl, credentials, file } = req.query;
+    const { repoUrl, credentials = '', file } = req.query;
 
-    if (!repoUrl || !credentials || !file) {
-        return res.status(400).json({ error: 'repoUrl, credentials e file são obrigatórios' });
+    if (!repoUrl || !file) {
+        return res.status(400).json({ error: 'repoUrl e file são obrigatórios' });
     }
 
     try {

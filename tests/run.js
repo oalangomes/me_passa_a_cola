@@ -1,3 +1,4 @@
+process.env.API_TOKEN = 'testtoken';
 const { app } = require('../src/index');
 const { cloneRepo } = require('../src/utils/git');
 const assert = require('assert');
@@ -25,10 +26,10 @@ async function testBasicEndpoints() {
   const server = startServer();
   const port = server.address().port;
 
-  const res = await fetch(`http://localhost:${port}/pdf-to-notion`, {
+  const res = await fetch(`http://localhost:${port}/notion-content`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({})
+    body: JSON.stringify({ type: 'pdf' })
   });
 
   assert.strictEqual(res.status, 400);
@@ -77,7 +78,7 @@ async function testGitFileRoute() {
   const server = startServer();
   const port = server.address().port;
 
-  const res = await fetch(`http://localhost:${port}/git-file?repoUrl=/tmp/origin3.git&credentials=&file=readme.txt&x-api-token=`, {});
+  const res = await fetch(`http://localhost:${port}/git-file?repoUrl=/tmp/origin3.git&credentials=&file=readme.txt&x-api-token=testtoken`, {});
   assert.strictEqual(res.status, 200);
   const data = await res.json();
   assert.strictEqual(data.content.trim(), 'hello');
