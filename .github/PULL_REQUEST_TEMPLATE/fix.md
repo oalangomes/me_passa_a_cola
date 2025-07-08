@@ -1,10 +1,9 @@
 ## Descrição
 
-Explique brevemente o que foi desenvolvido e o motivo.
+Explique brevemente o que foi corrigido e o motivo.
 
 ## Tipo de mudança
 - [ ] Correção de bug
-- [ ] Nova funcionalidade
 - [ ] Melhoria de documentação
 - [ ] Outros (descreva)
 
