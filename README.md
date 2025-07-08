@@ -513,12 +513,13 @@ O campo `milestone` aceita o número ou o título da milestone.
 ### Atualizar Issue
 
 ```http
-PATCH /github-issues/{numero}
+PATCH /github-issues
 
 {
   "token": "ghp_xxx",
   "owner": "usuario",
   "repo": "repositorio",
+  "number": 123,
   "title": "Novo título",
   "state": "open",
   "milestone": 1
@@ -528,12 +529,13 @@ PATCH /github-issues/{numero}
 ### Fechar Issue
 
 ```http
-DELETE /github-issues/{numero}
+DELETE /github-issues
 
 {
   "token": "ghp_xxx",
   "owner": "usuario",
-  "repo": "repositorio"
+  "repo": "repositorio",
+  "number": 123
 }
 ```
 
@@ -579,12 +581,13 @@ GET /github-milestones?token=ghp_xxx&owner=usuario&repo=repositorio&state=open
 ### Atualizar Milestone
 
 ```http
-PATCH /github-milestones/{numero}
+PATCH /github-milestones
 
 {
   "token": "ghp_xxx",
   "owner": "usuario",
   "repo": "repositorio",
+  "number": 1,
   "title": "Sprint 1 - Ajuste"
 }
 ```
@@ -605,10 +608,11 @@ POST /github-projects
 ### Criar Column no Projeto (GraphQL)
 
 ```http
-POST /github-projects/{project_id}/columns
+POST /github-projects/columns
 
 {
   "token": "ghp_xxx",
+  "project_id": "proj1",
   "name": "To Do"
 }
 ```
@@ -616,10 +620,11 @@ POST /github-projects/{project_id}/columns
 ### Adicionar Issue ao Projeto (use `node_id` da issue)
 
 ```http
-POST /github-projects/columns/{column_id}/cards
+POST /github-projects/columns/cards
 
 {
   "token": "ghp_xxx",
+  "column_id": "col1",
   "issue_id": "abc123"
 }
 ```
@@ -633,7 +638,7 @@ GET /github-projects?token=ghp_xxx&owner=usuario&repo=repositorio
 ### Listar Colunas do Projeto
 
 ```http
-GET /github-projects/{project_id}/columns?token=ghp_xxx
+GET /github-projects/columns?token=ghp_xxx&project_id=proj1
 ```
 
 ### Criar Pull Request
@@ -677,23 +682,25 @@ Use o campo `type` para indicar qual modelo de PR será utilizado (`feature`, `f
 ### Atualizar/Fechar Pull Request
 
 ```http
-PATCH /github-pulls/{numero}
+PATCH /github-pulls
 
 {
   "token": "ghp_xxx",
   "owner": "usuario",
   "repo": "repositorio",
+  "number": 10,
   "title": "Novo título"
 }
 ```
 
 ```http
-DELETE /github-pulls/{numero}
+DELETE /github-pulls
 
 {
   "token": "ghp_xxx",
   "owner": "usuario",
-  "repo": "repositorio"
+  "repo": "repositorio",
+  "number": 10
 }
 ```
 
