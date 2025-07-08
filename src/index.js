@@ -86,9 +86,17 @@ app.use('/doca', express.static(path.join(__dirname, '..', 'docs')));
 
 function loadTemplate(type, name = '') {
     try {
-        const file = type === 'issue'
-            ? path.join(__dirname, '..', '.github', 'ISSUE_TEMPLATE', `${name}.md`)
-            : path.join(__dirname, '..', '.github', 'PULL_REQUEST_TEMPLATE.md');
+        if (type === 'issue') {
+            const file = path.join(__dirname, '..', '.github', 'ISSUE_TEMPLATE', `${name}.md`);
+            return fs.readFileSync(file, 'utf8');
+        }
+        const file = path.join(
+            __dirname,
+            '..',
+            '.github',
+            'PULL_REQUEST_TEMPLATE',
+            `${name}.md`
+        );
         return fs.readFileSync(file, 'utf8');
     } catch (err) {
         return '';
@@ -1169,12 +1177,12 @@ app.get('/github-projects/:project_id/columns', async (req, res) => {
 });
 
 app.post('/github-pulls', async (req, res) => {
-    const { token, owner, repo, title, head, base, body = '' } = req.body;
+    const { token, owner, repo, title, head, base, body = '', type = 'feature' } = req.body;
     if (!token || !owner || !repo || !title || !head || !base) {
         return res.status(400).json({ error: 'token, owner, repo, title, head e base são obrigatórios' });
     }
     try {
-        const prBody = body || loadTemplate('pr');
+        const prBody = body || loadTemplate('pr', type);
         const pull = await createPullRequest({ token, owner, repo, title, head, base, body: prBody });
         res.json({ ok: true, pull });
     } catch (err) {

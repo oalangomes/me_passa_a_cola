@@ -403,6 +403,10 @@ githubToken: ghp_xxx
 githubOwner: usuario
 githubRepo: repositorio
 defaultIssueProject: proj1
+pullRequestTemplates:
+  feature: .github/PULL_REQUEST_TEMPLATE/feature.md
+  fix: .github/PULL_REQUEST_TEMPLATE/fix.md
+  chore: .github/PULL_REQUEST_TEMPLATE/chore.md
 issueRules:
   - if:
       labels: ['bug']
@@ -410,6 +414,9 @@ issueRules:
       milestone: 'Sprint 1'
       column: 'Bugs'
 ```
+
+A seção `pullRequestTemplates` define os caminhos para cada tipo de PR. Se omitida,
+o serviço usará os arquivos dentro de `.github/PULL_REQUEST_TEMPLATE`.
 
 Ou em JSON:
 
@@ -419,9 +426,17 @@ Ou em JSON:
   "commitWorkflow": "deploy.yml",
   "githubToken": "ghp_xxx",
   "githubOwner": "usuario",
-  "githubRepo": "repositorio"
+  "githubRepo": "repositorio",
+  "pullRequestTemplates": {
+    "feature": ".github/PULL_REQUEST_TEMPLATE/feature.md",
+    "fix": ".github/PULL_REQUEST_TEMPLATE/fix.md",
+    "chore": ".github/PULL_REQUEST_TEMPLATE/chore.md"
+  }
 }
 ```
+
+Use `pullRequestTemplates` para indicar diferentes modelos de Pull Request. Se
+nenhum caminho for configurado, o serviço procura por `.github/PULL_REQUEST_TEMPLATE/<tipo>.md`.
 
 O campo `issueRules` permite automatizar passos após criar ou atualizar uma issue. Veja um exemplo de regra que define milestone e coluna quando a label `bug` estiver presente.
 
@@ -632,9 +647,12 @@ POST /github-pulls
   "repo": "repositorio",
   "title": "Minha feature",
   "head": "feature-branch",
-  "base": "main"
+  "base": "main",
+  "type": "feature"
 }
 ```
+
+O campo `type` indica qual template de Pull Request deve ser aplicado.
 
 ### Criar e Mesclar Pull Request automaticamente
 
@@ -653,6 +671,8 @@ POST /github-pulls/auto
   "autoClose": true
 }
 ```
+
+Use o campo `type` para indicar qual modelo de PR será utilizado (`feature`, `fix` ou `chore`).
 
 ### Atualizar/Fechar Pull Request
 
