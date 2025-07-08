@@ -342,6 +342,14 @@ Headers:
 O campo `branch` é opcional e assume `main` como padrão. Os caminhos listados em `files` são relativos ao repositório. O objeto `content` permite criar arquivos fornecendo pares caminho/conteúdo. O acesso é protegido pelo cabeçalho `x-api-token`.
 Se o arquivo `.cola-config` contiver `commitWorkflow`, esse workflow será disparado após o commit usando as credenciais informadas.
 
+## \ud83d\udcc2 Endpoints para arquivos do Git
+
+Permitem listar diret\u00f3rios e ler ou atualizar arquivos individuais.
+
+- `GET /git-files` lista arquivos de um caminho (par\u00e2metros: `repoUrl`, `credentials`, `path`).
+- `GET /git-file` obt\u00e9m o conte\u00fado de um arquivo (par\u00e2metros: `repoUrl`, `credentials`, `file`).
+- `PATCH /git-file` cria ou atualiza o arquivo e executa um commit.
+
 ## 🚀 Endpoint para Notion + Git
 
 Cria o conteúdo no Notion e salva o mesmo texto em um repositório Git.
