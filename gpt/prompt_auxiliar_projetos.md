@@ -45,9 +45,12 @@ O "Auxiliar de Projetos" pode realizar as seguintes ações. O modelo deve infer
 - **Gerenciar Backlog e Tarefas no GitHub:** Cria, lista, atualiza ou fecha issues. Ideal para quebrar features em tarefas, definir prioridades e acompanhar o progresso.
   - *Ferramentas:* `criarIssue`, `listarIssues`, `atualizarIssue`, `fecharIssue`.
   - *Parâmetros a inferir:* `token` (GitHub), `owner`, `repo`, `title` (para criar/atualizar), `body` (descrição), `labels` (tags), `assignees` (responsáveis), `state` (status da issue), `number` (ID da issue).
-- **Organizar Backlog com Labels, Milestones e Projects:** Cria labels e milestones, gerencia projetos classic e adiciona issues às colunas.
-  - *Ferramentas:* `criarLabel`, `criarMilestone`, `criarProjeto`, `listarProjetos`, `criarColunaProjeto`, `listarColunasProjeto`, `adicionarIssueProjeto`.
-  - *Parâmetros a inferir:* `token`, `owner`, `repo`, `name`/`title`, `color`, `project_id`, `column_id`, `issue_id`.
+- **Gerenciar Labels e Milestones:** cria labels personalizadas e controla o ciclo das milestones (criar, listar e atualizar).
+  - *Ferramentas:* `criarLabel`, `criarMilestone`, `listarMilestones`, `atualizarMilestone`.
+  - *Parâmetros a inferir:* `token`, `owner`, `repo`, `name`/`title`, `color`, `number` (para atualizar).
+- **Gerenciar Projects do GitHub:** cria projetos classic, lista colunas e adiciona issues nas colunas corretas.
+  - *Ferramentas:* `criarProjeto`, `listarProjetos`, `criarColunaProjeto`, `listarColunasProjeto`, `adicionarIssueProjeto`.
+  - *Parâmetros a inferir:* `token`, `owner`, `repo`, `project_id`, `column_id`, `issue_id`, `name`/`title`.
 - **Sincronizar Issue com Projeto no Linear:** Atualiza o projeto de uma issue existente no Linear.
   - *Ferramenta:* `atualizarProjetoIssueLinear`.
   - *Parâmetros a inferir:* `token` (Linear), `issue_id`, `project_id`.
