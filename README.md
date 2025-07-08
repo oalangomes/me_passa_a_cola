@@ -313,32 +313,6 @@ POST /atualizar-titulos-e-tags
 ```
 
 
-## 🚀 Endpoint de Commit no Git
-
-A API disponibiliza a rota `POST /git-commit` para realizar commits em repositórios privados utilizando um token de acesso.
-
-### Requisição
-
-```http
-POST /git-commit?x-api-token=<seu_token>
-
-{
-  "repoUrl": "https://github.com/usuario/repositorio.git",
-  "credentials": "ghp_xxx",
-  "message": "feat: meu commit",
-  "files": ["arquivo.txt"],
-  "branch": "main",  # opcional
-  "content": {
-  "novo.txt": "conteudo gerado"
-  }
-  "githubToken": "ghp_xxx",      # opcional para disparar workflow
-  "githubOwner": "usuario",      # opcional
-  "githubRepo": "repositorio"    # opcional
-}
-```
-
-O campo `branch` é opcional e assume `main` como padrão. Os caminhos listados em `files` são relativos ao repositório. O objeto `content` permite criar arquivos fornecendo pares caminho/conteúdo. O acesso é protegido pelo parâmetro de query `x-api-token`.
-Se o arquivo `.cola-config` contiver `commitWorkflow`, esse workflow será disparado após o commit usando as credenciais informadas.
 
 ## \ud83d\udcc2 Endpoints para arquivos do Git
 
@@ -346,7 +320,7 @@ Permitem listar diret\u00f3rios e ler ou atualizar arquivos individuais.
 
 - `GET /git-files` lista arquivos de um caminho (par\u00e2metros: `repoUrl`, `credentials`, `path`).
 - `GET /git-file` obt\u00e9m o conte\u00fado de um arquivo (par\u00e2metros: `repoUrl`, `credentials`, `file`).
-- `PATCH /git-file` cria ou atualiza o arquivo e executa um commit.
+- `PATCH /git-file` cria ou atualiza arquivos e executa um commit.
 
 Exemplos de uso:
 
@@ -366,9 +340,11 @@ Headers:
 {
   "repoUrl": "https://github.com/usuario/repositorio.git",
   "credentials": "usuario:token",
-  "filePath": "docs/novo.md",
-  "content": "# Novo conte\u00fado",
-  "commitMessage": "docs: atualiza arquivo"
+  "content": {
+    "docs/novo.md": "# Novo conte\u00fado",
+    "docs/outro.md": "Outro texto"
+  },
+  "commitMessage": "docs: atualiza"
 }
 ```
 
@@ -403,7 +379,7 @@ As tags informadas são combinadas com tags geradas automaticamente a partir do 
 
 Antes de iniciar a API é preciso definir algumas variáveis no ambiente:
 
-- `API_TOKEN`: usada para autenticação em `/git-commit`.
+- `API_TOKEN`: usada para autenticação nas rotas de Git.
 - `PORT` (opcional, padrão `3333`).
 
 Você pode exportá-las no terminal ou criar um arquivo `.env` na raiz do projeto.
