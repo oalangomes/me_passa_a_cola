@@ -231,9 +231,7 @@
           { "name": "labels", "in": "query", "required": false, "schema": { "type": "string" } }
         ],
         "responses": { "200": { "description": "Sucesso" } }
-      }
-    },
-    "/github-issues": {
+      },
       "patch": {
         "operationId": "atualizarIssue",
         "description": "Atualiza uma issue existente",
@@ -310,9 +308,7 @@
           { "name": "state", "in": "query", "required": false, "schema": { "type": "string", "default": "open" } }
         ],
         "responses": { "200": { "description": "Sucesso" } }
-      }
-    },
-    "/github-milestones": {
+      },
       "patch": {
         "operationId": "atualizarMilestone",
         "description": "Atualiza uma milestone",
