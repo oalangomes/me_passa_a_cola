@@ -258,7 +258,7 @@ async function testGithubPullAuto() {
     return originalFetch(url, options);
   };
 
-  const res = await fetch(`http://localhost:${port}/github-pulls/auto`, {
+  const res = await fetch(`http://localhost:${port}/github-pulls`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -270,6 +270,7 @@ async function testGithubPullAuto() {
       repoUrl: '/tmp/pr.git',
       credentials: '',
       type: 'feature',
+      merge: true,
       autoClose: true
     })
   });
