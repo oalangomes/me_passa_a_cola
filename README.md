@@ -694,7 +694,7 @@ DELETE /github-pulls?token=ghp_xxx&owner=usuario&repo=repositorio&number=10
 ### Disparar Workflow
 
 ```http
-POST /github-workflows/dispatch
+POST /github-workflows
 
 {
   "token": "ghp_xxx",
@@ -708,7 +708,7 @@ POST /github-workflows/dispatch
 ### Verificar Status do Workflow
 
 ```http
-GET /github-workflows/status?token=ghp_xxx&owner=usuario&repo=repositorio&run_id=12345
+GET /github-workflows?token=ghp_xxx&owner=usuario&repo=repositorio&run_id=12345
 ```
 
 ## 🔄 Integrar Projeto no Linear

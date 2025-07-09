@@ -50,11 +50,11 @@ Lista issues do repositório
 
 Atualiza uma issue existente. Envie `state: "closed"` para fechar.
 
-## POST /github-workflows/dispatch
+## POST /github-workflows
 
 Dispara um workflow no GitHub
 
-## GET /github-workflows/status
+## GET /github-workflows
 
 Consulta o status de um workflow run
 
