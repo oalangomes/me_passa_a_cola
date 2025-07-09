@@ -164,7 +164,7 @@
         "responses": { "200": { "description": "Sucesso" } }
       }
     },
-    "/github-workflows/dispatch": {
+    "/github-workflows": {
       "post": {
         "operationId": "dispararWorkflow",
         "description": "Dispara um workflow no GitHub",
@@ -173,9 +173,7 @@
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubWorkflowDispatch" } } }
         },
         "responses": { "200": { "description": "Sucesso" } }
-      }
-    },
-    "/github-workflows/status": {
+      },
       "get": {
         "operationId": "statusWorkflow",
         "description": "Consulta o status de um workflow run",

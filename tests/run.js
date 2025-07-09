@@ -43,6 +43,9 @@ async function testBasicEndpoints() {
   assert(spec.paths['/github-issues']);
   assert(spec.paths['/github-projects']);
   assert(spec.paths['/github-projects/columns/cards']);
+  assert(spec.paths['/github-workflows']);
+  assert(!spec.paths['/github-workflows/dispatch']);
+  assert(!spec.paths['/github-workflows/status']);
   server.close();
 }
 

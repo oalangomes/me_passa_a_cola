@@ -1235,7 +1235,7 @@ app.patch('/github-pulls', async (req, res) => {
 });
 
 // ----- GitHub Workflows -----
-app.post('/github-workflows/dispatch', async (req, res) => {
+app.post('/github-workflows', async (req, res) => {
     const { token, owner, repo, workflow_id, ref = 'main', inputs = {} } = req.body;
     if (!token || !owner || !repo || !workflow_id) {
         return res.status(400).json({ error: 'token, owner, repo e workflow_id são obrigatórios' });
@@ -1249,7 +1249,7 @@ app.post('/github-workflows/dispatch', async (req, res) => {
     }
 });
 
-app.get('/github-workflows/status', async (req, res) => {
+app.get('/github-workflows', async (req, res) => {
     const { token, owner, repo, run_id } = req.query;
     if (!token || !owner || !repo || !run_id) {
         return res.status(400).json({ error: 'token, owner, repo e run_id são obrigatórios' });
