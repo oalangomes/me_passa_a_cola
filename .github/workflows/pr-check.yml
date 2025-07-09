@@ -2,7 +2,7 @@ name: PR Check - Testes e Lint
 
 on:
   pull_request:
-    branches: ["**"]
+    branches: [master]
 
 permissions:
   contents: read
@@ -11,7 +11,9 @@ permissions:
 
 jobs:
   check:
+    name: Testes e Lint
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout do código
         uses: actions/checkout@v3
@@ -22,12 +24,13 @@ jobs:
           node-version: '20'
 
       - name: Instalar dependências
-        run: npm ci
+        run: npm ci --workspaces --include-workspace-root
+
+      - name: Instalar dependências do app mobile
+        run: npm install --workspace=mobile
 
       - name: Rodar Linter
-        run: |
-          node --check src/index.js
-          node --check src/formatter.js
+        run: npm run lint
 
       - name: Rodar Testes
         run: npm test
