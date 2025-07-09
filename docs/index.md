@@ -627,10 +627,10 @@ POST /github-pulls
 
 O campo `type` indica qual template de Pull Request deve ser aplicado.
 
-### Criar e Mesclar Pull Request automaticamente
+### Exemplo com merge automático
 
 ```http
-POST /github-pulls/auto
+POST /github-pulls
 
 {
   "token": "ghp_xxx",
@@ -641,6 +641,7 @@ POST /github-pulls/auto
   "repoUrl": "https://github.com/usuario/repositorio.git",
   "credentials": "usuario:token",
   "type": "feature",
+  "merge": true,
   "autoClose": true
 }
 ```
@@ -661,9 +662,6 @@ PATCH /github-pulls
 }
 ```
 
-```http
-DELETE /github-pulls?token=ghp_xxx&owner=usuario&repo=repositorio&number=10
-```
 
 ### Disparar Workflow
 
