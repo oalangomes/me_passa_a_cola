@@ -99,14 +99,10 @@ Adiciona issue ao projeto via GraphQL (use o `node_id` da issue)
 
 ## POST /github-pulls
 
-Cria um pull request
-
-## POST /github-pulls/auto
-
-Cria e mescla automaticamente um pull request a partir de um template definido em `.cola-config`. Envie `autoClose: true` para fechar o PR após o merge.
+Cria um pull request. Se `merge: true` (ou `auto: true`) for enviado no corpo, o PR será mesclado automaticamente. Utilize `autoClose: true` para fechar o PR após o merge.
 
 ```http
-POST /github-pulls/auto
+POST /github-pulls
 
 {
   "token": "ghp_xxx",
@@ -117,17 +113,14 @@ POST /github-pulls/auto
   "repoUrl": "https://github.com/usuario/repositorio.git",
   "credentials": "usuario:token",
   "type": "feature",
+  "merge": true,
   "autoClose": true
 }
 ```
 
 ## PATCH /github-pulls
 
-Atualiza um pull request
-
-## DELETE /github-pulls
-
-Fecha um pull request
+Atualiza, fecha ou mescla um pull request. Envie `merge: true` (ou `auto: true`) para realizar o merge. Para apenas fechar, use `close: true` ou `state: 'closed'`.
 
 ## POST /linear-issues/project
 
