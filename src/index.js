@@ -903,7 +903,7 @@ app.post('/github-issues', async (req, res) => {
     }
     try {
         let config = {};
-        if (repoUrl && credentials) {
+        if (repoUrl) {
             try {
                 const repoPath = await cloneRepo(repoUrl, credentials);
                 config = loadColaConfig(repoPath);
@@ -957,13 +957,13 @@ app.post('/github-issues', async (req, res) => {
 });
 
 app.patch('/github-issues', async (req, res) => {
-    const { token, owner, repo, number, milestone, repoUrl, credentials } = req.body;
+    const { token, owner, repo, number, milestone, state, repoUrl, credentials } = req.body;
     if (!token || !owner || !repo || !number) {
         return res.status(400).json({ error: 'token, owner, repo e number são obrigatórios' });
     }
     try {
         let config = {};
-        if (repoUrl && credentials) {
+        if (repoUrl) {
             try {
                 const repoPath = await cloneRepo(repoUrl, credentials);
                 config = loadColaConfig(repoPath);
@@ -981,22 +981,16 @@ app.patch('/github-issues', async (req, res) => {
                 console.warn('Falha ao buscar milestone:', err.message);
             }
         }
-        const issue = await updateIssue({ token, owner, repo, issue_number: number, milestone: milestoneNumber, ...req.body });
+        const issue = await updateIssue({
+            token,
+            owner,
+            repo,
+            issue_number: number,
+            milestone: milestoneNumber,
+            state,
+            ...req.body,
+        });
         await applyIssueRules(issue, { token, owner, repo, defaultIssueProject: config.defaultIssueProject, issueRules: config.issueRules });
-        res.json({ ok: true, issue });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.delete('/github-issues', async (req, res) => {
-    const { token, owner, repo, number } = req.query;
-    if (!token || !owner || !repo || !number) {
-        return res.status(400).json({ error: 'token, owner, repo e number são obrigatórios' });
-    }
-    try {
-        const issue = await closeIssue({ token, owner, repo, issue_number: Number(number) });
         res.json({ ok: true, issue });
     } catch (err) {
         console.error(err);

@@ -48,11 +48,7 @@ Lista issues do repositório
 
 ## PATCH /github-issues
 
-Atualiza uma issue existente
-
-## DELETE /github-issues
-
-Fecha uma issue
+Atualiza uma issue existente. Envie `state: "closed"` para fechar.
 
 ## POST /github-workflows/dispatch
 

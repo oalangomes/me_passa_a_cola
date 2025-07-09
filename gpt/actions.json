@@ -156,22 +156,11 @@
       },
       "patch": {
         "operationId": "atualizarIssue",
-        "description": "Atualiza uma issue existente",
+        "description": "Atualiza uma issue existente ou fecha quando `state` é `closed`",
         "requestBody": {
           "required": true,
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GithubIssueUpdate" } } }
         },
-        "responses": { "200": { "description": "Sucesso" } }
-      },
-      "delete": {
-        "operationId": "fecharIssue",
-        "description": "Fecha uma issue",
-        "parameters": [
-          { "name": "token", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "owner", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "repo", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "number", "in": "query", "required": true, "schema": { "type": "integer" } }
-        ],
         "responses": { "200": { "description": "Sucesso" } }
       }
     },
@@ -616,16 +605,6 @@
                 { "type": "string" }
               ]
             }
-          },
-          "required": ["token", "owner", "repo", "number"]
-        },
-        "GithubIssueDelete": {
-          "type": "object",
-          "properties": {
-            "token": { "type": "string" },
-            "owner": { "type": "string" },
-            "repo": { "type": "string" },
-            "number": { "type": "integer" }
           },
           "required": ["token", "owner", "repo", "number"]
         },
