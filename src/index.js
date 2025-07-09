@@ -6,7 +6,7 @@ try {
 // index.js
 const express = require('express');
 const { Client } = require('@notionhq/client');
-const { createEnhancedNotionBlocks, getEmojiForCallout } = require('./formatter');
+const { createEnhancedNotionBlocks } = require('./formatter');
 const { STOPWORDS, reconcileTags, extractTagsSmart } = require('./utils/tags');
 const {
     searchDatabaseByName,
@@ -14,7 +14,6 @@ const {
     limparTagsRuins,
     removerTagsOrfas,
     getOrCreateTags,
-    filterValidProperties,
     getOrCreatePage,
     sleep
 } = require('./utils/notion');
@@ -22,7 +21,6 @@ const { cloneRepo, commitAndPush, listRepoFiles, readRepoFile } = require('./uti
 const {
     createIssue,
     updateIssue,
-    closeIssue,
     listIssues,
     dispatchWorkflow,
     getWorkflowRun,
@@ -104,7 +102,7 @@ function loadTemplate(type, name = '') {
 }
 
 function parseGitHubRepo(url) {
-    const match = url && url.match(/github\.com[:\/](.+?)\/(.+?)(?:\.git)?$/);
+    const match = url && url.match(/github\.com[:/](.+?)\/(.+?)(?:\.git)?$/);
     if (!match) return { owner: '', repo: '' };
     return { owner: match[1], repo: match[2].replace(/\.git$/, '') };
 }
@@ -120,8 +118,7 @@ async function createNotionResumo(req, res) {
             resumo,
             tags = [],
             data,
-            as_subpage = false, // pode ignorar, vamos garantir pela lógica
-            parent_title,
+            // as_subpage e parent_title podem ser ignorados
             ...outrasProps
         } = req.body;
 
@@ -230,7 +227,7 @@ async function createNotionFlashcards(req, res) {
         });
 
         // 3. Para cada flashcard, cria uma subpágina dentro da FlashcardsPage
-        const promises = (flashcards || []).map(async (card, i) => {
+        const promises = (flashcards || []).map(async card => {
             if (!card.pergunta || !card.resposta) return null;
             const cardTitle = card.pergunta.length > 45 ? card.pergunta.substring(0, 45) + "..." : card.pergunta;
 
@@ -1176,7 +1173,7 @@ app.post('/github-pulls/auto', async (req, res) => {
         const config = loadColaConfig(repoPath);
         let templates = {};
         if (typeof config.pullRequestTemplates === 'string') {
-            try { templates = JSON.parse(config.pullRequestTemplates); } catch {}
+            try { templates = JSON.parse(config.pullRequestTemplates); } catch (err) { /* ignore */ }
         } else if (typeof config.pullRequestTemplates === 'object') {
             templates = config.pullRequestTemplates;
         } else {

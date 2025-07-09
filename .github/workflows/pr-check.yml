@@ -13,7 +13,7 @@ jobs:
         with:
           node-version: 18
       - run: npm ci
-      - name: Check JavaScript syntax
-        run: |
-          node --check src/index.js
-          node --check src/formatter.js
+      - name: Run lint
+        run: npm run lint
+      - name: Run tests
+        run: npm test

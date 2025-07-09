@@ -57,10 +57,6 @@ function reconcileTags(tagsDesejadas, options) {
     });
 }
 
-function countRelevantWords(tag) {
-    return tag.split(/\s+/).filter(w => !stopSet.has(w.toLowerCase())).length;
-}
-
 function cleanHeading(heading) {
     let text = heading.replace(/[\u{1F600}-\u{1F64F}]/gu, '')
         .replace(/[^\wÀ-ÿ ]/g, '')

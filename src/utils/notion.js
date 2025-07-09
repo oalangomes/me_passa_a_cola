@@ -52,10 +52,10 @@ async function limparTagsRuins(notion, databaseId, stopwords, contextoObrigatori
 
     function isTagBoa(opt) {
         if (!opt.name || opt.name.trim().length < 3) return false;
-        if (!/^[a-zA-ZÀ-ÿ0-9\s\-]+$/.test(opt.name)) return false;
+        if (!/^[a-zA-ZÀ-ÿ0-9\s-]+$/.test(opt.name)) return false;
         if (stopSet.has(opt.name.toLowerCase())) return false;
         if (countRelevantWords(opt.name) > 3) return false;
-        if (/^[\d\s\-]+$/.test(opt.name)) return false;
+        if (/^[\d\s-]+$/.test(opt.name)) return false;
         return true;
     }
 
