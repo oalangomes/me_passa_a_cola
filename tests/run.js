@@ -15,6 +15,7 @@ async function main() {
   await testGithubMilestoneRoutes();
   await testGithubIssueDefaults();
   await testGithubIssueRules();
+  await testGithubIssueClose();
   await testGithubPullAuto();
 }
 
@@ -198,6 +199,32 @@ async function testGithubProjectRoutes() {
   global.fetch = originalFetch;
 }
 
+async function testGithubIssueClose() {
+  const server = startServer();
+  const port = server.address().port;
+
+  let patchedState = null;
+  const originalFetch = global.fetch;
+  global.fetch = async (url, options) => {
+    if (url.startsWith('https://api.github.com/repos/o/r/issues/5') && options.method === 'PATCH') {
+      patchedState = JSON.parse(options.body).state;
+      return { ok: true, json: async () => ({}) };
+    }
+    return originalFetch(url, options);
+  };
+
+  const res = await fetch(`http://localhost:${port}/github-issues`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: 't', owner: 'o', repo: 'r', number: 5, state: 'closed' })
+  });
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(patchedState, 'closed');
+
+  server.close();
+  global.fetch = originalFetch;
+}
+
 async function testGithubPullAuto() {
   execSync('rm -rf /tmp/pr.git');
   execSync('git init --bare /tmp/pr.git');
@@ -357,8 +384,13 @@ async function testGithubIssueRules() {
 
   execSync('rm -rf /tmp/workrules');
   execSync('git clone /tmp/rules.git /tmp/workrules');
-  fs.writeFileSync('/tmp/workrules/.cola-config.yml', 'defaultIssueProject: proj1\nissueRules:\n  - if:\n      labels: [bug]\n    set:\n      milestone: M1\n      column: Bugs\n');
-  execSync('cd /tmp/workrules && git add .cola-config.yml && git commit -m init && git push origin master');
+  fs.writeFileSync('/tmp/workrules/.cola-config.json', JSON.stringify({
+    defaultIssueProject: 'proj1',
+    issueRules: [
+      { if: { labels: ['bug'] }, set: { milestone: 'M1', column: 'Bugs' } }
+    ]
+  }));
+  execSync('cd /tmp/workrules && git add .cola-config.json && git commit -m init && git push origin master');
 
   const server = startServer();
   const port = server.address().port;
