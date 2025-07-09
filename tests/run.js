@@ -1,12 +1,14 @@
 process.env.API_TOKEN = 'testtoken';
 const { app } = require('../src/index');
 const { cloneRepo } = require('../src/utils/git');
+const { parseRichText } = require('../src/formatter');
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
 async function main() {
+  await testParseRichText();
   await testBasicEndpoints();
   await testCloneRepoPull();
   await testGitFileRoute();
@@ -22,6 +24,33 @@ async function main() {
 function startServer() {
   const server = app.listen(0);
   return server;
+}
+
+async function testParseRichText() {
+  const result = parseRichText('Veja **isso** e *aquilo* em https://x.com depois');
+  assert.deepStrictEqual(result, [
+    { type: 'text', text: { content: 'Veja ' } },
+    { type: 'text', text: { content: 'isso' }, annotations: {
+      bold: true,
+      italic: false,
+      strikethrough: false,
+      underline: false,
+      code: false,
+      color: 'default'
+    } },
+    { type: 'text', text: { content: ' e ' } },
+    { type: 'text', text: { content: 'aquilo' }, annotations: {
+      bold: false,
+      italic: true,
+      strikethrough: false,
+      underline: false,
+      code: false,
+      color: 'default'
+    } },
+    { type: 'text', text: { content: ' em ' } },
+    { type: 'text', text: { content: 'https://x.com', link: { url: 'https://x.com' } } },
+    { type: 'text', text: { content: ' depois' } }
+  ]);
 }
 
 async function testBasicEndpoints() {

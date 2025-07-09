@@ -219,42 +219,53 @@ function createEnhancedNotionBlocks(content) {
 
 /**
  * Converte texto simples em array rich_text do Notion,
- * tratando links simples.
- * TODO: Expandir para suportar **negrito**, *itálico*, etc.
+ * tratando links, **negrito** e *itálico*.
  * @param {string} text - Texto a ser processado.
  * @returns {Array<object>} - Array de objetos rich_text.
  */
 function parseRichText(text) {
-    const richTextArray = [];
-    // Regex CORRIGIDO para detectar URLs
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = [];
+    const tokenRegex = /(\*\*[^*]+\*\*|\*[^*]+\*|https?:\/\/[^\s]+)/g;
     let lastIndex = 0;
     let match;
 
-    // Remove asteriscos simples utilizados para marcação (*, **)
-    text = text.replace(/\*/g, "");
-    // Itera sobre as URLs encontradas
-    while ((match = urlRegex.exec(text)) !== null) {
-        // Adiciona o texto antes da URL, se houver
+    while ((match = tokenRegex.exec(text)) !== null) {
         if (match.index > lastIndex) {
-            richTextArray.push({ type: "text", text: { content: text.substring(lastIndex, match.index) } });
+            parts.push({ content: text.substring(lastIndex, match.index) });
         }
-        // Adiciona a URL como um link
-        richTextArray.push({ type: "text", text: { content: match[0], link: { url: match[0] } } });
-        lastIndex = match.index + match[0].length;
+        const token = match[0];
+        if (token.startsWith("**")) {
+            parts.push({ content: token.slice(2, -2), bold: true });
+        } else if (token.startsWith("*")) {
+            parts.push({ content: token.slice(1, -1), italic: true });
+        } else {
+            parts.push({ content: token, link: token });
+        }
+        lastIndex = match.index + token.length;
     }
 
-    // Adiciona o texto restante após a última URL, se houver
     if (lastIndex < text.length) {
-        richTextArray.push({ type: "text", text: { content: text.substring(lastIndex) } });
+        parts.push({ content: text.substring(lastIndex) });
     }
 
-    // Se nenhum link foi encontrado e o array está vazio, adiciona o texto inteiro
-    if (richTextArray.length === 0 && text) {
-        richTextArray.push({ type: "text", text: { content: text } });
+    if (parts.length === 0) {
+        parts.push({ content: text });
     }
 
-    return richTextArray;
+    return parts.map(p => ({
+        type: "text",
+        text: { content: p.content, ...(p.link ? { link: { url: p.link } } : {}) },
+        ...(p.bold || p.italic ? {
+            annotations: {
+                bold: !!p.bold,
+                italic: !!p.italic,
+                strikethrough: false,
+                underline: false,
+                code: false,
+                color: "default",
+            },
+        } : {}),
+    }));
 }
 
 
