@@ -431,14 +431,15 @@ app.get("/notion-content", async (req, res) => {
             subtitulo,
             tipo,       // "Resumo", "Flashcards", etc.
             limit = 10,
-            ttl
+            ttl,
+            start_cursor
         } = req.query;
 
         if (!notion_token) return res.status(400).json({ error: "Token do Notion é obrigatório." });
 
-        const cacheKey = `notion:${nome_database}:${tema}:${subtitulo}:${tipo}:${limit}`;
+        const cacheKey = `notion:${nome_database}:${tema}:${subtitulo}:${tipo}:${limit}:${start_cursor}`;
         const cached = getCache(cacheKey);
-        if (cached) return res.json({ ok: true, results: cached });
+        if (cached) return res.json({ ok: true, ...cached });
 
         const notion = new Client({ auth: notion_token });
 
@@ -488,6 +489,7 @@ app.get("/notion-content", async (req, res) => {
             database_id: db.id,
             filter: filters.length === 1 ? filters[0] : (filters.length > 1 ? { and: filters } : undefined),
             page_size: Number(limit) || 10,
+            ...(start_cursor && { start_cursor })
         });
 
         // Monta o array de resultados
@@ -536,8 +538,9 @@ app.get("/notion-content", async (req, res) => {
             };
         }));
 
-        res.json({ ok: true, results });
-        setCache(cacheKey, results, ttl);
+        const payload = { next_cursor: response.next_cursor, results };
+        res.json({ ok: true, ...payload });
+        setCache(cacheKey, payload, ttl);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });

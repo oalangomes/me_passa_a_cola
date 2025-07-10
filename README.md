@@ -273,17 +273,18 @@ Consulta conteúdos registrados no Notion.
 - `subtitulo` (opcional)
 - `tipo` (opcional)
 - `limit` (opcional)
+- `start_cursor` (opcional)
 
 **Exemplo**
 
 ```
-GET /notion-content?notion_token=secret_xxx&tema=Matéria%20X&limit=5
+GET /notion-content?notion_token=secret_xxx&tema=Matéria%20X&limit=5&start_cursor=XYZ
 ```
 
 **Resposta**
 
 ```json
-{ "ok": true, "results": [] }
+{ "ok": true, "next_cursor": null, "results": [] }
 ```
 
 ### POST /atualizar-titulos-e-tags
