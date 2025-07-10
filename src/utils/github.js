@@ -1,7 +1,11 @@
+const { getCache, setCache } = require("./cache");
 const API_URL = 'https://api.github.com';
 const GRAPHQL_URL = 'https://api.github.com/graphql';
 
-async function githubGraphqlRequest(token, query, variables = {}) {
+async function githubGraphqlRequest(token, query, variables = {}, ttl) {
+    const cacheKey = `gh-graphql:${query}:${JSON.stringify(variables)}`;
+    const cached = getCache(cacheKey);
+    if (cached) return cached;
     const res = await fetch(GRAPHQL_URL, {
         method: 'POST',
         headers: {
@@ -19,10 +23,14 @@ async function githubGraphqlRequest(token, query, variables = {}) {
         const msg = data.errors.map(e => e.message).join('; ');
         throw new Error(msg);
     }
+    setCache(cacheKey, data, ttl);
     return data;
 }
 
-async function githubRequest(token, method, url, body, extraHeaders = {}) {
+async function githubRequest(token, method, url, body, extraHeaders = {}, ttl) {
+    const cacheKey = `gh-rest:${method}:${url}:${JSON.stringify(body)}`;
+    const cached = getCache(cacheKey);
+    if (cached) return cached;
     const headers = {
         'Accept': 'application/vnd.github+json',
         'Authorization': `Bearer ${token}`,
@@ -39,8 +47,13 @@ async function githubRequest(token, method, url, body, extraHeaders = {}) {
         const errText = await res.text();
         throw new Error(`GitHub API ${res.status}: ${errText}`);
     }
-    if (res.status === 204) return {};
-    return await res.json();
+    if (res.status === 204) {
+        setCache(cacheKey, {}, ttl);
+        return {};
+    }
+    const json = await res.json();
+    setCache(cacheKey, json, ttl);
+    return json;
 }
 
 async function createIssue({ token, owner, repo, title, body = '', labels = [], assignees = [], milestone }) {

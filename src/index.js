@@ -47,6 +47,7 @@ const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const { loadColaConfig, loadCommitTemplate } = require('./utils/cola-config');
 const { applyIssueRules } = require('./utils/issue-rules');
+const { getCache, setCache } = require("./utils/cache");
 
 function loadSwaggerDocs() {
     const dir = path.join(__dirname, '..', 'gpt');
@@ -429,10 +430,15 @@ app.get("/notion-content", async (req, res) => {
             tema,
             subtitulo,
             tipo,       // "Resumo", "Flashcards", etc.
-            limit = 10
+            limit = 10,
+            ttl
         } = req.query;
 
         if (!notion_token) return res.status(400).json({ error: "Token do Notion é obrigatório." });
+
+        const cacheKey = `notion:${nome_database}:${tema}:${subtitulo}:${tipo}:${limit}`;
+        const cached = getCache(cacheKey);
+        if (cached) return res.json({ ok: true, results: cached });
 
         const notion = new Client({ auth: notion_token });
 
@@ -531,6 +537,7 @@ app.get("/notion-content", async (req, res) => {
         }));
 
         res.json({ ok: true, results });
+        setCache(cacheKey, results, ttl);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
