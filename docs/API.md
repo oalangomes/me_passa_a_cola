@@ -44,7 +44,7 @@ do arquivo `.cola-config` são utilizados, quando presentes.
 
 ## GET /github-issues
 
-Lista issues do repositório
+Lista issues do repositório. Suporta paginação usando `page` e `per_page`.
 
 ## PATCH /github-issues
 
@@ -79,8 +79,7 @@ Atualiza uma milestone
 Cria um projeto via GraphQL
 
 ## GET /github-projects
-
-Lista projetos do repositório
+Lista projetos do repositório. Para navegar, envie o parâmetro `cursor` retornado pela página anterior.
 
 ## POST /github-projects/columns
 

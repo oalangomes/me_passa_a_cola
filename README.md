@@ -536,8 +536,9 @@ Para fechar, envie `state: "closed"`.
 ### Listar Issues
 
 ```http
-GET /github-issues?token=ghp_xxx&owner=usuario&repo=repositorio&state=open
+GET /github-issues?token=ghp_xxx&owner=usuario&repo=repositorio&state=open&page=1&per_page=30
 ```
+Defina `page` e `per_page` para controlar a paginação.
 
 ### Criar Label
 
@@ -626,8 +627,9 @@ POST /github-projects/columns/cards
 ### Listar Projetos
 
 ```http
-GET /github-projects?token=ghp_xxx&owner=usuario&repo=repositorio
+GET /github-projects?token=ghp_xxx&owner=usuario&repo=repositorio&cursor=
 ```
+Use o valor de `cursor` retornado anteriormente para acessar a próxima página.
 
 ### Listar Colunas do Projeto
 
