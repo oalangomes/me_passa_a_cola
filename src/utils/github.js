@@ -72,8 +72,11 @@ async function closeIssue(params) {
     return updateIssue({ ...params, state: 'closed' });
 }
 
-async function listIssues({ token, owner, repo, state = 'open', labels = '' }) {
-    const searchParams = new URLSearchParams({ state, labels });
+async function listIssues({ token, owner, repo, state = 'open', labels = '', page, per_page }) {
+    const params = { state, labels };
+    if (page !== undefined) params.page = page;
+    if (per_page !== undefined) params.per_page = per_page;
+    const searchParams = new URLSearchParams(params);
     return githubRequest(token, 'GET', `/repos/${owner}/${repo}/issues?${searchParams.toString()}`);
 }
 
@@ -120,9 +123,9 @@ async function createProjectColumn({ token, project_id, name }) {
     return result.data.addProjectColumn.columnEdge.node;
 }
 
-async function listProjects({ token, owner, repo }) {
-    const query = `query ($owner: String!, $name: String!) {\n  repository(owner: $owner, name: $name) {\n    projects(first: 100) { nodes { id name body } }\n  }\n}`;
-    const result = await githubGraphqlRequest(token, query, { owner, name: repo });
+async function listProjects({ token, owner, repo, cursor }) {
+    const query = `query ($owner: String!, $name: String!, $cursor: String) {\n  repository(owner: $owner, name: $name) {\n    projects(first: 100, after: $cursor) { nodes { id name body } }\n  }\n}`;
+    const result = await githubGraphqlRequest(token, query, { owner, name: repo, cursor });
     return result.data.repository.projects.nodes;
 }
 

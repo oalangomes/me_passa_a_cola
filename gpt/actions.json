@@ -150,7 +150,9 @@
           { "name": "owner", "in": "query", "required": true, "schema": { "type": "string" } },
           { "name": "repo", "in": "query", "required": true, "schema": { "type": "string" } },
           { "name": "state", "in": "query", "required": false, "schema": { "type": "string", "default": "open" } },
-          { "name": "labels", "in": "query", "required": false, "schema": { "type": "string" } }
+          { "name": "labels", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "integer" } },
+          { "name": "per_page", "in": "query", "required": false, "schema": { "type": "integer" } }
         ],
         "responses": { "200": { "description": "Sucesso" } }
       },
@@ -244,7 +246,8 @@
         "parameters": [
           { "name": "token", "in": "query", "required": true, "schema": { "type": "string" } },
           { "name": "owner", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "repo", "in": "query", "required": true, "schema": { "type": "string" } }
+          { "name": "repo", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "cursor", "in": "query", "required": false, "schema": { "type": "string" } }
         ],
         "responses": { "200": { "description": "Sucesso" } }
       }

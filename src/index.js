@@ -1006,12 +1006,12 @@ app.patch('/github-issues', async (req, res) => {
 });
 
 app.get('/github-issues', async (req, res) => {
-    const { token, owner, repo, state = 'open', labels = '' } = req.query;
+    const { token, owner, repo, state = 'open', labels = '', page, per_page } = req.query;
     if (!token || !owner || !repo) {
         return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
     }
     try {
-        const issues = await listIssues({ token, owner, repo, state, labels });
+        const issues = await listIssues({ token, owner, repo, state, labels, page, per_page });
         res.json({ ok: true, issues });
     } catch (err) {
         console.error(err);
@@ -1118,12 +1118,12 @@ app.post('/github-projects/columns/cards', async (req, res) => {
 });
 
 app.get('/github-projects', async (req, res) => {
-    const { token, owner, repo } = req.query;
+    const { token, owner, repo, cursor } = req.query;
     if (!token || !owner || !repo) {
         return res.status(400).json({ error: 'token, owner e repo são obrigatórios' });
     }
     try {
-        const projects = await listProjects({ token, owner, repo });
+        const projects = await listProjects({ token, owner, repo, cursor });
         res.json({ ok: true, projects });
     } catch (err) {
         console.error(err);
