@@ -273,17 +273,18 @@ Consulta conteúdos registrados no Notion.
 - `subtitulo` (opcional)
 - `tipo` (opcional)
 - `limit` (opcional)
+- `start_cursor` (opcional)
 
 **Exemplo**
 
 ```
-GET /notion-content?notion_token=secret_xxx&tema=Matéria%20X&limit=5
+GET /notion-content?notion_token=secret_xxx&tema=Matéria%20X&limit=5&start_cursor=XYZ
 ```
 
 **Resposta**
 
 ```json
-{ "ok": true, "results": [] }
+{ "ok": true, "next_cursor": null, "results": [] }
 ```
 
 ### POST /atualizar-titulos-e-tags
@@ -510,8 +511,9 @@ Para fechar, envie `state: "closed"`.
 ### Listar Issues
 
 ```http
-GET /github-issues?token=ghp_xxx&owner=usuario&repo=repositorio&state=open
+GET /github-issues?token=ghp_xxx&owner=usuario&repo=repositorio&state=open&page=1&per_page=30
 ```
+Defina `page` e `per_page` para controlar a paginação.
 
 ### Criar Label
 
@@ -600,8 +602,9 @@ POST /github-projects/columns/cards
 ### Listar Projetos
 
 ```http
-GET /github-projects?token=ghp_xxx&owner=usuario&repo=repositorio
+GET /github-projects?token=ghp_xxx&owner=usuario&repo=repositorio&cursor=
 ```
+Use o valor de `cursor` retornado anteriormente para acessar a próxima página.
 
 ### Listar Colunas do Projeto
 
@@ -707,6 +710,28 @@ Depois de iniciar o servidor, acesse `http://localhost:3333/doca/API.md` para vi
 Todos os endpoints estão definidos em um único arquivo, `gpt/actions.json`.
 Use esse arquivo na etapa de **Actions** ao criar seu GPT para habilitar
 as integrações disponíveis.
+
+## 🗃️ Cache e TTL
+
+Algumas chamadas da API utilizam um cache local para evitar requisições
+repetidas. O conteúdo fica salvo em `.cache.json` na raiz do projeto.
+
+### Ativar cache global
+
+Defina a variável de ambiente `CACHE_TTL` com o tempo de vida, em segundos,
+das entradas. Exemplo:
+
+```bash
+CACHE_TTL=60 npm start
+```
+
+Valores maiores que `0` criam ou atualizam o arquivo `.cache.json`. Para
+desativar, basta não definir a variável ou usar `0`.
+
+### TTL por requisição
+
+Endpoints como `GET /notion-content` aceitam o parâmetro `ttl` para definir
+o cache apenas daquela chamada.
 
 ## 🔍 Validação automática do deploy
 
