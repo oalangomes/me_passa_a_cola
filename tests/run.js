@@ -2,6 +2,7 @@ process.env.API_TOKEN = 'testtoken';
 const { app } = require('../src/index');
 const { cloneRepo } = require('../src/utils/git');
 const { parseRichText } = require('../src/formatter');
+const { listIssues, listProjects } = require('../src/utils/github');
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -17,6 +18,8 @@ async function main() {
   await testGithubMilestoneRoutes();
   await testGithubIssueDefaults();
   await testGithubIssueRules();
+  await testGithubListCache();
+  await testCacheTtlExpiration();
   await testGithubIssueClose();
   await testGithubPullAuto();
 }
@@ -474,6 +477,63 @@ async function testGithubIssueRules() {
 
   server.close();
   global.fetch = originalFetch;
+}
+
+async function testGithubListCache() {
+  process.env.CACHE_TTL = '2';
+  let fetchCalls = 0;
+  const originalFetch = global.fetch;
+  global.fetch = async (url, options) => {
+    if (url.startsWith('https://api.github.com/repos/o/r/issues')) {
+      fetchCalls++;
+      const page = new URL(url).searchParams.get('page') || '1';
+      return { ok: true, json: async () => ([{ id: `iss${page}` }]) };
+    }
+    if (url === 'https://api.github.com/graphql') {
+      fetchCalls++;
+      const vars = JSON.parse(options.body).variables || {};
+      return { ok: true, json: async () => ({ data: { repository: { projects: { nodes: [{ id: vars.cursor ? 'proj2' : 'proj1' }] } } } }) };
+    }
+    return originalFetch(url, options);
+  };
+
+  await listIssues({ token: 't', owner: 'o', repo: 'r', page: 1 });
+  await listIssues({ token: 't', owner: 'o', repo: 'r', page: 2 });
+  await listProjects({ token: 't', owner: 'o', repo: 'r' });
+  await listProjects({ token: 't', owner: 'o', repo: 'r', cursor: 'c1' });
+  assert.strictEqual(fetchCalls, 4);
+
+  fetchCalls = 0;
+  await listIssues({ token: 't', owner: 'o', repo: 'r', page: 1 });
+  await listProjects({ token: 't', owner: 'o', repo: 'r' });
+  assert.strictEqual(fetchCalls, 0);
+
+  global.fetch = originalFetch;
+}
+
+async function testCacheTtlExpiration() {
+  process.env.CACHE_TTL = '1';
+  let fetchCalls = 0;
+  const originalFetch = global.fetch;
+  global.fetch = async (url, options) => {
+    if (url.startsWith('https://api.github.com/repos/ttl/r')) {
+      fetchCalls++;
+      return { ok: true, json: async () => ([{ id: 'ttl' }]) };
+    }
+    return originalFetch(url, options);
+  };
+
+  await listIssues({ token: 't', owner: 'ttl', repo: 'r', page: 1 });
+  assert.strictEqual(fetchCalls, 1);
+  await new Promise(r => setTimeout(r, 1100));
+  await listIssues({ token: 't', owner: 'ttl', repo: 'r', page: 1 });
+  assert.strictEqual(fetchCalls, 2);
+
+  await listIssues({ token: 't', owner: 'ttl', repo: 'r', page: 1 });
+  assert.strictEqual(fetchCalls, 2);
+
+  global.fetch = originalFetch;
+  delete process.env.CACHE_TTL;
 }
 
 main().catch(err => {
