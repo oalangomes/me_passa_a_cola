@@ -739,6 +739,28 @@ Todos os endpoints estão definidos em um único arquivo, `gpt/actions.json`.
 Use esse arquivo na etapa de **Actions** ao criar seu GPT para habilitar
 as integrações disponíveis.
 
+## 🗃️ Cache e TTL
+
+Algumas chamadas da API utilizam um cache local para evitar requisições
+repetidas. O conteúdo é salvo no arquivo `.cache.json` na raiz do projeto.
+
+### Ativar cache global
+
+Defina a variável de ambiente `CACHE_TTL` com o tempo de vida, em segundos,
+das entradas armazenadas. Exemplo:
+
+```bash
+CACHE_TTL=60 npm start
+```
+
+Um valor maior que `0` cria ou atualiza o arquivo `.cache.json`. Para
+desativar, não defina a variável ou use `0`.
+
+### TTL por requisição
+
+Endpoints como `GET /notion-content` aceitam o parâmetro `ttl` para definir
+o cache apenas daquela chamada específica.
+
 ## 🔍 Validação automática do deploy
 
 O repositório conta com um workflow do **GitHub Actions** que monitora se o
