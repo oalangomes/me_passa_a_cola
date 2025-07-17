@@ -32,7 +32,9 @@
           { "name": "tema", "in": "query", "required": false, "schema": { "type": "string" } },
           { "name": "subtitulo", "in": "query", "required": false, "schema": { "type": "string" } },
           { "name": "tipo", "in": "query", "required": false, "schema": { "type": "string" } },
-          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "default": 10 } }
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "default": 10 } },
+          { "name": "start_cursor", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "ttl", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "Tempo de cache em segundos" }
         ],
         "responses": { "200": { "description": "Sucesso" } }
       }

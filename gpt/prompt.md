@@ -215,6 +215,8 @@ O endpoint `/atualizar-titulos-e-tags` revisa as subpáginas de um tema e ajusta
 - Flashcards são enviados como subpáginas com blocos separados para pergunta/resposta
 - Campos opcionais são ignorados se não enviados
 - Em caso de erro, até 3 tentativas são feitas com log da falha
+- As requisições podem usar cache local (`.cache.json`). Defina `CACHE_TTL` ou envie `ttl` no endpoint `/notion-content` para controlar o tempo de expiração.
+- Para grandes volumes de dados use a paginação disponível (`page`/`per_page`, `cursor` ou `start_cursor`).
 
 
 ## 🔗 Links

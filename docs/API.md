@@ -7,7 +7,7 @@ Cria conteúdo no Notion de acordo com o campo `type` enviado no corpo
 
 ## GET /notion-content
 
-Busca conteúdos já registrados no Notion usando filtros de tema, subtítulo ou tipo. Aceita o parâmetro `start_cursor` para paginação e retorna `next_cursor` na resposta.
+Busca conteúdos já registrados no Notion usando filtros de tema, subtítulo ou tipo. Aceita os parâmetros `start_cursor` (paginação) e `ttl` (cache em segundos). Retorna `next_cursor` na resposta.
 
 ## POST /atualizar-titulos-e-tags
 
