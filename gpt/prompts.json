@@ -1,0 +1,18 @@
+{
+  "criarConteudoNotion": {
+    "example": {
+      "notion_token": "seu_token",
+      "nome_database": "Me Passa A Cola (GPT)",
+      "tema": "Matemática",
+      "type": "resumo",
+      "resumo": "Conteúdo gerado"
+    }
+  },
+  "listarIssues": {
+    "example": {
+      "token": "ghp_xxx",
+      "owner": "usuario",
+      "repo": "repositorio"
+    }
+  }
+}

@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node src/index.js",
     "test": "node tests/run.js",
-    "doca": "node src/doca.js"
+    "doca": "node src/doca.js",
+    "docs": "node scripts/generate-docs.js"
   },
   "keywords": [],
   "author": "",

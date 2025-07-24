@@ -728,10 +728,11 @@ POST /linear-issues/project
 }
 ```
 
-## 📚 Documentação com Doca
+## 📚 Documentação da API
 
-Execute `npm run doca` para gerar a documentação da API em `docs/API.md`.
-Depois de iniciar o servidor, acesse `http://localhost:3333/doca/API.md` para visualizar.
+Execute `npm run docs` para gerar `docs/API.md` a partir de `gpt/actions.json` e `gpt/prompts.json`.
+Se preferir, inicie o servidor e acesse `http://localhost:3333/doca/API.md` para visualizar a versão antiga.
+Um workflow chamado **Generate API Docs** também pode ser disparado manualmente para atualizar a documentação automaticamente.
 
 ### Ações para GPT personalizado
 
