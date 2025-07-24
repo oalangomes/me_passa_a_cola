@@ -737,7 +737,7 @@ o cache apenas daquela chamada.
 
 O repositório conta com um workflow do **GitHub Actions** que monitora se o
 deploy no Render está ativo. O arquivo
-`.github/workflows/render-deploy-and-check.yml` espera 45&nbsp;segundos antes de
+`.github/workflows/render-deploy-and-check.yml` espera 60&nbsp;segundos antes de
 fazer uma requisição para `https://me-passa-a-cola.onrender.com/health`. Se a
 resposta não for `200`, o workflow falha e sinaliza um problema no ambiente de
 produção.
