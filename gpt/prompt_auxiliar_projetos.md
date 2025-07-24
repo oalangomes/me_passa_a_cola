@@ -110,3 +110,8 @@ O fluxo sugerido é:
 - Enviar PDF para o Notion (`criarConteudoNotion` com `type: 'pdf'`).
 - Abrir PR da nova feature (`criarPullRequest` ou `criarPrAutomatico`).
 
+## ℹ️ Observações
+
+- `fecharIssue` utiliza o endpoint `atualizarIssue` com `state: 'closed'`.
+- `criarPrAutomatico` é uma variação de `criarPullRequest` configurada para mesclagem automática.
+
