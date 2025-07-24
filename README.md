@@ -1,5 +1,6 @@
 
 # 📘 Me passa a cola?
+![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)
 
 Um GPT personalizado criado com empatia, criatividade e foco real em pessoas que aprendem de forma diferente.
 
