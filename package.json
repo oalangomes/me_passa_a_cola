@@ -5,6 +5,8 @@
   "scripts": {
     "start": "node src/index.js",
     "test": "node tests/run.js",
+    "lint": "eslint .",
+    "check-structure": "node scripts/check-structure.js",
     "doca": "node src/doca.js",
     "docs": "node scripts/generate-docs.js"
   },
@@ -21,6 +23,9 @@
     "swagger-ui-express": "^4.6.3",
     "simple-git": "^3.28.0",
     "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0"
   },
   "engines": {
     "node": "18.x"
